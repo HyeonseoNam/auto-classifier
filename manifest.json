@@ -1,0 +1,10 @@
+{
+	"id": "auto-tagger",
+	"name": "Auto Tagger",
+	"version": "1.0.0",
+	"minAppVersion": "1.0.0",
+	"description": "This plugin allows you to to automatically assign tags based on the note (title, content or selected area) using chatGPT.",
+	"author": "Hyeonseo Nam",
+	"authorUrl": "https://github.com/HyeonseoNam/auto-tagger",
+	"isDesktopOnly": false
+}
