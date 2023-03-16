@@ -1,0 +1,17 @@
+.setting-item-child {
+    background-color: var(--background-secondary);
+    padding-left: 20px;
+    border-top: 0px;
+    animation: child-enter 0.3s ease;
+}
+
+@keyframes child-enter {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
