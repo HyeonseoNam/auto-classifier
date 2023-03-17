@@ -2,8 +2,8 @@
     background-color: var(--background-secondary);
     padding-left: 1em;
     padding-right: 1em;
-    border-top: 0px;
-    animation: child-enter 0.3s ease;
+    border-top: 0.5px solid var(--background-primary);
+    /* animation: child-enter 0.3s ease; */
 }
 
 @keyframes child-enter {
@@ -15,4 +15,12 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.wide-text-area > .setting-item-info {
+    flex: 0.3 1 auto;
+}
+.wide-text-area textarea {
+    width: 100%;
+    height: 10em;
 }
