@@ -1,4 +1,4 @@
-import { App, MarkdownView, Notice, Editor} from "obsidian";
+import { App, MarkdownView, Notice, Editor, getAllTags, TagCache} from "obsidian";
 
 export class ViewManager {
   app: App;
@@ -34,6 +34,19 @@ export class ViewManager {
       return cache?.frontmatter || null;
     }
     return null;
+  }
+
+  async getTags(filterRegex?: string): Promise<string[] | null> {
+    const tagsDict = this.app.metadataCache.getTags();
+    let tags = Object.keys(tagsDict); 
+    if (!tags || tags.length == 0) return null;
+    // remove #
+    tags = tags.map((tag) => tag.replace(/^#/, ''));
+    // filter
+    if (filterRegex) {
+      return tags.filter((tag) => RegExp(filterRegex).test(tag));
+    }
+    return tags;
   }
 
   async insertAtFrontMatter(key: string, value: string, overwrite = false): Promise<void> {
