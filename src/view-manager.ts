@@ -36,6 +36,14 @@ export class ViewManager {
     return null;
   }
 
+  async getContent(): Promise<string | null> {
+    const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (activeView) {
+      return activeView.getViewData();
+    }
+    return null;
+  }
+
   async getTags(filterRegex?: string): Promise<string[] | null> {
     const tagsDict = this.app.metadataCache.getTags();
     let tags = Object.keys(tagsDict); 
