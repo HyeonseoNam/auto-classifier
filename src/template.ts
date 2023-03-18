@@ -1,6 +1,5 @@
 
-export const defaultTemplate = `
-Classify it as the most appropriate one based on the rules.
+export const defaultTemplate = `Classify it as the most appropriate one based on the rules.
 
 #Input:
 {{input}}
