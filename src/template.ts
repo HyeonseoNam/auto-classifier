@@ -1,12 +1,13 @@
 
-export const defaultTemplate = `Classify it as the most appropriate one based on the rules.
+export const defaultTemplate = `Suggest the most appropriate tag based on #Input.
 
 #Input:
 {{input}}
 
 #Rules:
 - No other words. If you don't know, just answer "-1"
-- Choose one from the list here:
+
+#Reference:
 {{reference}}
 `
 
