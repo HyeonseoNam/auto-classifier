@@ -1,3 +1,7 @@
+h1 {
+    margin-top: 1.2em;
+}
+
 .setting-item-child {
     background-color: var(--background-secondary);
     padding-left: 1em;
@@ -5,7 +9,11 @@
     border-top: 0.5px solid var(--background-primary);
     /* animation: child-enter 0.3s ease; */
 }
+.setting-item-child textarea, .setting-item-child input {
+    background-color: var(--background-primary);
+}
 
+setting-item-description
 @keyframes child-enter {
     0% {
         opacity: 0;
@@ -17,8 +25,17 @@
     }
 }
 
-.wide-text-area > .setting-item-info, .wide-text-area > .setting-item-description {
+.wide-text-area .setting-item-info, .wide-text-area .setting-item-description {
     flex: 0.3 1 auto;
+}
+.block-control-item {
+    flex-direction: column;
+}
+
+.block-control-item .setting-item-control, .block-control-item .setting-item-info {
+    margin-top: 1em;
+    width: 100%;
+    margin-right: auto;
 }
 .height10-text-area textarea {
     width: 100%;

@@ -7,7 +7,7 @@ export const defaultTemplate = `Classify it as the most appropriate one based on
 #Rules:
 - No other words. If you don't know, just answer "-1"
 - Choose one from the list here:
-{{references}}
+{{reference}}
 `
 
 export const ddcRules = `

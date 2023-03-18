@@ -258,8 +258,9 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
  
     // ------- [Advanced Setting] -------
     // Toggle custom rule
+    containerEl.createEl('h1', { text: 'Advanced Setting' });
     new Setting(containerEl)
-    .setName('Use Custom Rule')
+    .setName('Use Custom Request Template')
     .addToggle((toggle) =>
       toggle
         .setValue(tagOption.useCustomCommand)
@@ -271,11 +272,12 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
     
     // Custom template textarea
     if (tagOption.useCustomCommand) {
-      new Setting(containerEl)
-        .setName('Custom Command Template')
-        .setDesc('Specify custom rules to reference tags.')
+      const customTemplateEl = new Setting(containerEl)
+        .setDesc('')
         .setClass('setting-item-child')
+        .setClass('block-control-item')
         .setClass('height20-text-area')
+
         .addTextArea((text) =>
           text
             .setPlaceholder('Custom template')
@@ -295,11 +297,16 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
               this.display();
           })
         });
-        
-        
-    }
+        customTemplateEl.descEl.innerHTML += `
+          This plugin is based on the ChatGPT answer.
+          You can use your own template when making a request to ChatGPT.<br><br>
+          Variables:<br>
+          - {{input}}: The text to classify will be inserted here.<br>
+          - {{reference}}: The reference tags will be inserted here.<br>`;     
+      }
+    }    
 
-}
+
 
 setRefType(refType: ReferenceType) {
   this.plugin.settings.tagOption.refType = refType;
