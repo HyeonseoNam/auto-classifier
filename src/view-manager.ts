@@ -91,6 +91,7 @@ export class ViewManager {
     } else {
       newName = `${newName} ${value}`;
     }
+    newName = newName.replace(/[\"\/<>:\|?\"]/g, ''); // for window file name
     // @ts-ignore
     const newPath = file.getNewPathAfterRename(newName)
     await this.app.fileManager.renameFile(file, newPath);
