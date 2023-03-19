@@ -83,6 +83,19 @@ export class ViewManager {
     }
   }
   
+  async insertAtTitle(value: string, overwrite = false): Promise<void> {
+    const file = this.app.workspace.getActiveFile();
+    let newName = file.basename;
+    if (overwrite) {
+      newName = `${value}`;
+    } else {
+      newName = `${newName} ${value}`;
+    }
+    // @ts-ignore
+    const newPath = file.getNewPathAfterRename(newName)
+    await this.app.fileManager.renameFile(file, newPath);
+  }
+
   async insertAtCursor(value: string, overwrite = false): Promise<void> {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
 
