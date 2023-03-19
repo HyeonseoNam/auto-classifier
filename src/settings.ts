@@ -70,9 +70,29 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         const commandOption = this.plugin.settings.commandOption;
         
+        containerEl.empty();
+        // shortcut button
+        const shortcutEl = new Setting(this.containerEl)
+        .setDesc('')
+        .addButton((cb) => {
+          cb.setButtonText("Specify shortcuts")
+          .setCta()
+          .onClick(() => {
+            // @ts-ignore
+            app.setting.openTabById("hotkeys");
+            // @ts-ignore
+            const tab = app.setting.activeTab;
+            tab.searchInputEl.value = `${this.plugin.manifest.name}:`;
+            tab.updateHotkeyVisibility();
+          });
+        });
+        shortcutEl.descEl.innerHTML += `
+        This plugin does not have default shortcuts to prevent conflicts. <br>
+        Assig shortcuts to commands for different input types.`
+        
+
         // ------- [API Setting] -------
         // API Key input
-        containerEl.empty();
         containerEl.createEl('h1', { text: 'API Setting' });
         const apiKeySetting = new Setting(containerEl)
         .setName('ChatGPT API Key')
