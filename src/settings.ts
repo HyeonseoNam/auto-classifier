@@ -259,15 +259,15 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
     
     // Custom template textarea
     if (commandOption.useCustomCommand) {
-      const customTemplateEl = new Setting(containerEl)
+      const customPromptTemplateEl = new Setting(containerEl)
+        .setName('Custom Prompt Template')
         .setDesc('')
         .setClass('setting-item-child')
         .setClass('block-control-item')
         .setClass('height20-text-area')
-
         .addTextArea((text) =>
           text
-            .setPlaceholder('Custom template')
+            .setPlaceholder('Write custom prompt template.')
             .setValue(commandOption.prmpt_template)
             .onChange(async (value) => {
               commandOption.prmpt_template = value;
@@ -284,13 +284,48 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
               this.display();
           })
         });
-        customTemplateEl.descEl.innerHTML += `
-          This plugin is based on the ChatGPT answer.
+
+        customPromptTemplateEl.descEl.innerHTML += `
+          This plugin is based on the ChatGPT answer.<br>
           You can use your own template when making a request to ChatGPT.<br><br>
           Variables:<br>
           - {{input}}: The text to classify will be inserted here.<br>
           - {{reference}}: The reference tags will be inserted here.<br>`;     
+      
+        const customChatRoleEl = new Setting(containerEl)
+        .setName('Custom Chat Role')
+        .setDesc('')
+        .setClass('setting-item-child')
+        .setClass('block-control-item')
+        .setClass('height10-text-area')
+        .addTextArea((text) =>
+          text
+            .setPlaceholder('Write custom chat role for gpt system.')
+            .setValue(commandOption.chat_role)
+            .onChange(async (value) => {
+              commandOption.chat_role = value;
+              await this.plugin.saveSettings();
+            })
+        )
+        .addExtraButton(cb => {
+          cb
+            .setIcon('reset')
+            .setTooltip('Restore to default')
+            .onClick(async () => {
+              commandOption.chat_role = DEFAULT_CHAT_ROLE;
+              await this.plugin.saveSettings();
+              this.display();
+          })
+        });
+
+        customChatRoleEl.descEl.innerHTML += `
+        Define custom role to ChatGPT system.`
       }
+      
+      
+
+
+
     }    
 
 

@@ -33,7 +33,7 @@ setting-item-description
 }
 
 .block-control-item .setting-item-control, .block-control-item .setting-item-info {
-    margin-top: 1em;
+    margin-top: 0.5em;
     width: 100%;
     margin-right: auto;
 }
