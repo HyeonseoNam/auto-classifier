@@ -1,18 +1,11 @@
-
-export const defaultTemplate = `Suggest the most appropriate tag based on #Input.
-
-#Input:
+export const system_role = `You are a JSON answer bot. Don't answer other words.`;
+export const user_prompt = `Classify this content:
+"""
 {{input}}
+"""
+Answer format is JSON {reliability:0~1, output:selected_category}. 
+Even if you are not sure, qualify the reliability and select one. 
+Output must be one of these:
 
-#Rules:
-- No other words. If you don't know, just answer "-1"
-
-#Reference:
 {{reference}}
-`
-
-export const ddcRules = `
-- Predict the DDC number of book that corresponds to #Input.
-- Answer should be {ddc number}.{ddc number}:{Category} form. 
-- examples: '000.0:category_title', '000.0:this_is_category'
-`
+`;
