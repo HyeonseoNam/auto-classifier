@@ -1,7 +1,7 @@
 import { App, Notice, PluginSettingTab, Setting} from "obsidian";
 import { ChatGPT } from 'src/api';
 import type AutoTaggerPlugin from "src/main";
-import { defaultTemplate } from 'src/template'
+import { DEFAULT_CHAT_ROLE, DEFAULT_PROMPT_TEMPLATE } from 'src/template'
 
 export enum ReferenceType {
     All,
@@ -16,7 +16,7 @@ export enum OutLocation {
 }
 
 // for tag, keyword
-export interface TagOption {
+export interface CommandOption {
     useRef: boolean;
     refs: string[];
     manualRefs: string[];
@@ -27,32 +27,34 @@ export interface TagOption {
     overwrite: boolean; // for OutLocation - FrontMatter
 
     useCustomCommand: boolean;
-    commandTemplate: string;
+    
+    chat_role: string;
+    prmpt_template: string;
 }
-
-
-
 
 
 export class AutoTaggerSettings {
     apiKey: string;
     apiKeyCreatedAt: Date | null;
-    tagOption: TagOption;
+    commandOption: CommandOption;
 }
 
 export const DEFAULT_SETTINGS: AutoTaggerSettings = {
     apiKey: '',
     apiKeyCreatedAt: null, 
-    tagOption: {
+    commandOption: {
         useRef: true,
         refs: [],
+        manualRefs: [],
         refType: ReferenceType.All,
         filterRegex: '',
         outLocation: OutLocation.FrontMatter,
         key: 'tag',
         overwrite: false,
         useCustomCommand: false,
-        commandTemplate: defaultTemplate
+
+        chat_role: DEFAULT_CHAT_ROLE,
+        prmpt_template: DEFAULT_PROMPT_TEMPLATE
     }, 
 };
 
@@ -66,7 +68,7 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
     async display(): Promise<void> {
 
         const { containerEl } = this;
-        const tagOption = this.plugin.settings.tagOption;
+        const commandOption = this.plugin.settings.commandOption;
         
         // ------- [API Setting] -------
         // API Key input
@@ -105,7 +107,7 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
                 apiTestMessageEl.style.color = 'var(--text-normal)';
                 this.plugin.settings.apiKeyCreatedAt = new Date();
                 try {
-                await ChatGPT.callAPI('How are you?', this.plugin.settings.apiKey);
+                await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey);
                   apiTestMessageEl.setText('Success! API working.');
                   apiTestMessageEl.style.color = 'var(--success-color)';
                 } catch (error) {
@@ -115,34 +117,19 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
             });
         });
 
-        // TODO: reference 사용 안하면 template에서 제거
         // ------- [Tag Reference Setting] -------
-        // Tag Reference Toggle
         containerEl.createEl('h1', { text: 'Tag Reference Setting' });
-        new Setting(containerEl)
-        .setName('Use Tag Reference')
-        .setDesc('When this toggle is on, the command for ChatGPT contains reference tags for classification. If turned off, ChatGPT may suggest new tags instead.')
-        .addToggle((toggle) =>
-          toggle
-            .setValue(tagOption.useRef)
-            .onChange(async (value) => {
-              tagOption.useRef = value;
-              this.display();
-            }),
-        );
 
         // Tag Reference Type Dropdown
-        if (tagOption.useRef){
           new Setting(containerEl)
-          .setName('Tag References')
+          .setName('Reference type')
           .setDesc('Choose the type of reference tag')
-          .setClass('setting-item-child')
           .addDropdown((dropdown) => {
               dropdown
                   .addOption(ReferenceType.All, "All tags")
                   .addOption(ReferenceType.Filter, "Filtered tags",)
                   .addOption(ReferenceType.Manual, "Manual tags")
-                  .setValue(tagOption.refType)
+                  .setValue(commandOption.refType)
                   .onChange(async (refTye) => {
                       this.setRefType(refTye);
                       this.setRefs(refTye);
@@ -151,7 +138,7 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
           });
           
         // Filtered tags - Regex setting
-        if (tagOption.refType == ReferenceType.Filter) {
+        if (commandOption.refType == ReferenceType.Filter) {
           new Setting(containerEl)
             .setName('Filter regex')
             .setDesc('Specify a regular expression to filter tags')
@@ -159,7 +146,7 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
             .addText((text) =>
               text
                 .setPlaceholder('Regular expression')
-                .setValue(tagOption.filterRegex)
+                .setValue(commandOption.filterRegex)
                 .onChange(async (value) => {
                   this.setRefs(ReferenceType.Filter, value);
                   
@@ -167,7 +154,7 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
             );
         }
         // Manual tags - manual input text area
-        else if (tagOption.refType == ReferenceType.Manual) {
+        else if (commandOption.refType == ReferenceType.Manual) {
           new Setting(containerEl)
             .setName('Manual tags')
             .setDesc('Manually specify tags to reference.')
@@ -176,7 +163,7 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
             .addTextArea((text) => {
               text
                 .setPlaceholder('Tags')
-                .setValue(tagOption.manualRefs?.join('\n'))
+                .setValue(commandOption.manualRefs?.join('\n'))
                 .onChange(async (value) => {
                   this.setRefs(ReferenceType.Manual, value);
                 })
@@ -187,7 +174,7 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
                 .setTooltip('Bring All Tags')
                 .onClick(async () => {
                   const allTags = await this.plugin.viewManager.getTags() ?? [];
-                  tagOption.manualRefs = allTags;
+                  commandOption.manualRefs = allTags;
                   this.setRefs(ReferenceType.Manual);
                   this.display();
               })
@@ -200,12 +187,12 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
         .addButton((cb) => {
             cb.setButtonText('View Reference Tags')
             .onClick(async () => {
-              const tags = tagOption.refs ?? [];
+              const tags = commandOption.refs ?? [];
               new Notice(`${tags.join('\n')}`);
             });
         });
        
-        }
+        
     
     // ------- [Output Tag Setting] -------
     // Tag Location dropdown
@@ -217,16 +204,16 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
         cb.addOption(OutLocation.FrontMatter, 'FrontMatter')
           .addOption(OutLocation.Title, 'Title alternative')
           .addOption(OutLocation.Cursor, 'Current cursor')
-          .setValue(tagOption.outLocation)
+          .setValue(commandOption.outLocation)
           .onChange(async (value) => {
-            tagOption.outLocation = value;
+            commandOption.outLocation = value;
             await this.plugin.saveSettings();
             this.display();
           });
       });
     
     // Frontmatter - key text setting
-    if (tagOption.outLocation == OutLocation.FrontMatter) {
+    if (commandOption.outLocation == OutLocation.FrontMatter) {
       new Setting(containerEl)
         .setName('FrontMatter key')
         .setDesc('Specify FrontMatter key to put the output tag')
@@ -234,9 +221,9 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
         .addText((text) =>
         text
           .setPlaceholder('Key')
-          .setValue(tagOption.Key)
+          .setValue(commandOption.key)
           .onChange(async (value) => {
-            tagOption.Key = value;
+            commandOption.key = value;
             await this.plugin.saveSettings();
           })
       );
@@ -249,9 +236,9 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
       .setClass('setting-item-child')
       .addToggle((toggle) =>
         toggle
-          .setValue(tagOption.overwrite)
+          .setValue(commandOption.overwrite)
           .onChange(async (value) => {
-            tagOption.overwrite = value;
+            commandOption.overwrite = value;
             await this.plugin.saveSettings();
           })
       );
@@ -263,15 +250,15 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
     .setName('Use Custom Request Template')
     .addToggle((toggle) =>
       toggle
-        .setValue(tagOption.useCustomCommand)
+        .setValue(commandOption.useCustomCommand)
         .onChange(async (value) => {
-          tagOption.useCustomCommand = value;
+          commandOption.useCustomCommand = value;
           this.display();
         }),
     );
     
     // Custom template textarea
-    if (tagOption.useCustomCommand) {
+    if (commandOption.useCustomCommand) {
       const customTemplateEl = new Setting(containerEl)
         .setDesc('')
         .setClass('setting-item-child')
@@ -281,9 +268,9 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
         .addTextArea((text) =>
           text
             .setPlaceholder('Custom template')
-            .setValue(tagOption.commandTemplate)
+            .setValue(commandOption.prmpt_template)
             .onChange(async (value) => {
-              tagOption.commandTemplate = value;
+              commandOption.prmpt_template = value;
               await this.plugin.saveSettings();
             })
         )
@@ -292,7 +279,7 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
             .setIcon('reset')
             .setTooltip('Restore to default')
             .onClick(async () => {
-              tagOption.commandTemplate = defaultTemplate;
+              commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
               await this.plugin.saveSettings();
               this.display();
           })
@@ -309,27 +296,27 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
 
 
 setRefType(refType: ReferenceType) {
-  this.plugin.settings.tagOption.refType = refType;
+  this.plugin.settings.commandOption.refType = refType;
 }
 
 async setRefs(refType: ReferenceType, value?: string) {
-  const tagOption = this.plugin.settings.tagOption;
+  const commandOption = this.plugin.settings.commandOption;
   if (refType == ReferenceType.All) {
     const tags = await this.plugin.viewManager.getTags() ?? [];
-    tagOption.refs = tags
+    commandOption.refs = tags
   }
   else if (refType == ReferenceType.Filter) {
     if (value) {
-      tagOption.filterRegex = value;
+      commandOption.filterRegex = value;
     }
-    const tags = await this.plugin.viewManager.getTags(tagOption.filterRegex) ?? [];
-    tagOption.refs = tags
+    const tags = await this.plugin.viewManager.getTags(commandOption.filterRegex) ?? [];
+    commandOption.refs = tags
   }
   else if (refType == ReferenceType.Manual) {
     if (value) {
-      tagOption.manualRefs = value?.split(/,|\n/).map((tag) => tag.trim());
+      commandOption.manualRefs = value?.split(/,|\n/).map((tag) => tag.trim());
     }
-    tagOption.refs = tagOption.manualRefs;
+    commandOption.refs = commandOption.manualRefs;
   }
   await this.plugin.saveSettings();
 }

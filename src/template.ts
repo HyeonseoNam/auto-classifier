@@ -1,5 +1,5 @@
-export const system_role = `You are a JSON answer bot. Don't answer other words.`;
-export const user_prompt = `Classify this content:
+export const DEFAULT_CHAT_ROLE = `You are a JSON answer bot. Don't answer other words.`;
+export const DEFAULT_PROMPT_TEMPLATE = `Classify this content:
 """
 {{input}}
 """
