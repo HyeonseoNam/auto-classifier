@@ -99,7 +99,7 @@ export class ViewManager {
 
   async insertAtCursor(value: string, overwrite = false): Promise<void> {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-
+    let tag = ` #${value} `;
     if (activeView) {
       const editor = activeView.editor;
       const selection = editor.getSelection();
@@ -108,7 +108,7 @@ export class ViewManager {
         editor.setSelection(editor.getCursor('to'));
       }
       // overwrite
-      editor.replaceSelection(value);
+      editor.replaceSelection(tag);
     }
   }
 
