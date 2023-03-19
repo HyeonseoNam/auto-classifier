@@ -13,7 +13,6 @@ h1 {
     background-color: var(--background-primary);
 }
 
-setting-item-description
 @keyframes child-enter {
     0% {
         opacity: 0;
