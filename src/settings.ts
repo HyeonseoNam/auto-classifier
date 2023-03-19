@@ -49,7 +49,7 @@ export const DEFAULT_SETTINGS: AutoTaggerSettings = {
         refType: ReferenceType.All,
         filterRegex: '',
         outLocation: OutLocation.FrontMatter,
-        key: 'tag',
+        key: 'tags',
         overwrite: false,
         useCustomCommand: false,
 
@@ -214,7 +214,9 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
       });
     
     // Frontmatter - key text setting
+    let overwriteName = '';
     if (commandOption.outLocation == OutLocation.FrontMatter) {
+      overwriteName = 'Overwrite value of the key';
       new Setting(containerEl)
         .setName('FrontMatter key')
         .setDesc('Specify FrontMatter key to put the output tag')
@@ -229,11 +231,16 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
           })
       );
     }
+    else if (commandOption.outLocation == OutLocation.Title) {
+      overwriteName = 'Overwrite whole title';
+    }
+    else if (commandOption.outLocation == OutLocation.Cursor) {
+      overwriteName = 'Overwrite selected area';
+    }
     
     // Overwrite toggle
     new Setting(containerEl)
-      .setName('Overwrite')
-      .setDesc('Overwrite existing content')
+      .setName(overwriteName)
       .setClass('setting-item-child')
       .addToggle((toggle) =>
         toggle
