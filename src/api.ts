@@ -2,7 +2,6 @@ export class ChatGPT {
     private static baseUrl = 'https://api.openai.com/v1/engines';
 
     static async callAPI(
-        
         prompt: string, 
         apiKey: string, 
         model = 'text-davinci-003',
