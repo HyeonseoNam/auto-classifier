@@ -1,4 +1,4 @@
-import { App, MarkdownView, Notice, Editor, getAllTags, TagCache} from "obsidian";
+import { App, MarkdownView, Notice, Editor, getAllTags, TagCache, FrontMatterCache} from "obsidian";
 
 export class ViewManager {
   app: App;
@@ -26,12 +26,15 @@ export class ViewManager {
     return null;
   }
 
-  async getFrontMatter(): Promise<Record<string, unknown> | null> {
+  async getFrontMatter(): Promise<string | null> {
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (activeView) {
       const file = activeView.file;
-      const cache = this.app.metadataCache.getFileCache(file);
-      return cache?.frontmatter || null;
+      const frontmatter:FrontMatterCache | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
+      if (frontmatter && frontmatter.hasOwnProperty('position')) {
+        delete frontmatter.position;
+      }
+      return JSON.stringify(frontmatter);
     }
     return null;
   }
