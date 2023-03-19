@@ -1,16 +1,16 @@
 export class ChatGPT {
-    private static baseUrl = 'https://api.openai.com/v1/engines';
-
+    private static baseUrl = 'https://api.openai.com/v1/chat/completions';
+    
     static async callAPI(
-        prompt: string, 
+        system_role: string, 
+        user_prompt: string,
         apiKey: string, 
-        model = 'text-davinci-003',
-        maxTokens = 256,
-        temperature = 0.7,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0): Promise<string> {
-        
+        model = "gpt-3.5-turbo",
+        temperature = 0,
+        max_tokens = 150,
+        top_p = 0.95,
+        frequency_penalty = 0,
+        presence_penalty = 0.5): Promise<string> {
     
         const headers = new Headers({
             'Content-Type': 'application/json',
@@ -18,8 +18,12 @@ export class ChatGPT {
         });
     
         const body = JSON.stringify({
-            prompt: prompt,
-            max_tokens: maxTokens,
+            model: 'gpt-3.5-turbo',
+            messages: [
+                {"role": "system", "content": system_role},
+                {"role": "user", "content": user_prompt},
+            ],
+            max_tokens: max_tokens,
             n: 1,
             // stop: '\n',
             stop: null,
@@ -29,7 +33,7 @@ export class ChatGPT {
             presence_penalty: presence_penalty
         });
     
-        const response = await fetch(`${this.baseUrl}/${model}/completions`, {
+        const response = await fetch(`${this.baseUrl}`, {
             method: 'POST',
             headers: headers,
             body: body,
@@ -40,6 +44,7 @@ export class ChatGPT {
         }
     
         const data = await response.json();
-        return data.choices[0].text.trim();
+        // return data.choices[0].text.trim();
+        return data.choices[0].message.content;
     }
 }
