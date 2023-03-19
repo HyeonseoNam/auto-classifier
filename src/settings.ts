@@ -105,14 +105,15 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
               this.plugin.settings.apiKeyCreatedAt
                 apiTestMessageEl.setText('Testing api call...');
                 apiTestMessageEl.style.color = 'var(--text-normal)';
-                this.plugin.settings.apiKeyCreatedAt = new Date();
                 try {
                 await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey);
                   apiTestMessageEl.setText('Success! API working.');
                   apiTestMessageEl.style.color = 'var(--success-color)';
+                  this.plugin.settings.apiKeyCreatedAt = new Date();
                 } catch (error) {
                   apiTestMessageEl.setText('Error: API is not working.');
                   apiTestMessageEl.style.color = 'var(--warning-color)';
+                  this.plugin.settings.apiKeyCreatedAt = null;
                 }
             });
         });
