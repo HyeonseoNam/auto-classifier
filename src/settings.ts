@@ -158,6 +158,10 @@ Assig shortcuts to commands for different input types.`
                     });
             });
 
+        // All tags - default setting
+        if (commandOption.refType == ReferenceType.All) {
+            this.setRefs(ReferenceType.All);
+        }
         // Filtered tags - Regex setting
         if (commandOption.refType == ReferenceType.Filter) {
             new Setting(containerEl)
@@ -170,7 +174,6 @@ Assig shortcuts to commands for different input types.`
                         .setValue(commandOption.filterRegex)
                         .onChange(async (value) => {
                             this.setRefs(ReferenceType.Filter, value);
-
                         })
                 );
         }

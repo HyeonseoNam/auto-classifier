@@ -73,6 +73,11 @@ export default class AutoTaggerPlugin extends Plugin {
 	// Main Classification
 	async classifyTag(inputType: InputType) {
 		const commandOption = this.settings.commandOption;
+		// ------- [API Key check] -------
+		if (!this.settings.apiKey) {
+			new Notice(`⛔ ${this.manifest.name}: You shuld input your API Key`);
+			return null
+		}
 		// ------- [Input] -------
 		const refs = this.settings.commandOption.refs;
 		// reference check
