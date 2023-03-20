@@ -147,13 +147,13 @@ Assign your own shortcuts to run commands for different input types.`
             .setDesc('Choose the type of reference tag')
             .addDropdown((dropdown) => {
                 dropdown
-                    .addOption(ReferenceType.All, "All tags")
-                    .addOption(ReferenceType.Filter, "Filtered tags",)
-                    .addOption(ReferenceType.Manual, "Manual tags")
-                    .setValue(commandOption.refType)
+                    .addOption(String(ReferenceType.All), "All tags")
+                    .addOption(String(ReferenceType.Filter), "Filtered tags",)
+                    .addOption(String(ReferenceType.Manual), "Manual tags")
+                    .setValue(String(commandOption.refType))
                     .onChange(async (refTye) => {
-                        this.setRefType(refTye);
-                        this.setRefs(refTye);
+                        this.setRefType(parseInt(refTye));
+                        this.setRefs(parseInt(refTye));
                         this.display();
                     });
             });
@@ -225,12 +225,12 @@ Assign your own shortcuts to run commands for different input types.`
             .setName('Output Tag Location')
             .setDesc('Specify where to put the output tag')
             .addDropdown((cb) => {
-                cb.addOption(OutLocation.FrontMatter, 'FrontMatter')
-                    .addOption(OutLocation.Title, 'Title alternative')
-                    .addOption(OutLocation.Cursor, 'Current cursor')
-                    .setValue(commandOption.outLocation)
+                cb.addOption(String(OutLocation.FrontMatter), 'FrontMatter')
+                    .addOption(String(OutLocation.Title), 'Title alternative')
+                    .addOption(String(OutLocation.Cursor), 'Current cursor')
+                    .setValue(String(commandOption.outLocation))
                     .onChange(async (value) => {
-                        commandOption.outLocation = value;
+                        commandOption.outLocation = parseInt(value);
                         await this.plugin.saveSettings();
                         this.display();
                     });

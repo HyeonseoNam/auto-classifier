@@ -181,10 +181,11 @@ export default class AutoClassifierPlugin extends Plugin {
 		loadingIcon.addClass('loading-icon');
 		const loadingText = document.createElement('span');
 		loadingText.textContent = text;
-
+		//@ts-ignore
 		notice.noticeEl.empty();
 		loadingContainer.appendChild(loadingIcon);
 		loadingContainer.appendChild(loadingText);
+		//@ts-ignore
 		notice.noticeEl.appendChild(loadingContainer);
 
 		return notice;

@@ -30,8 +30,8 @@ export class ViewManager {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView) {
             const file = activeView.file;
-            const frontmatter: FrontMatterCache | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
-            if (frontmatter && frontmatter.hasOwnProperty('position')) {
+            const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter as Partial<FrontMatterCache>;
+            if (frontmatter?.position) {
                 delete frontmatter.position;
             }
             return JSON.stringify(frontmatter);
@@ -55,6 +55,7 @@ export class ViewManager {
     }
 
     async getTags(filterRegex?: string): Promise<string[] | null> {
+        //@ts-ignore
         const tagsDict = this.app.metadataCache.getTags();
         let tags = Object.keys(tagsDict);
         if (!tags || tags.length == 0) return null;
@@ -92,6 +93,7 @@ export class ViewManager {
 
     async insertAtTitle(value: string, overwrite = false): Promise<void> {
         const file = this.app.workspace.getActiveFile();
+        if (!file) return; 
         let newName = file.basename;
         if (overwrite) {
             newName = `${value}`;
