@@ -87,8 +87,8 @@ export class AutoTaggerSettingTab extends PluginSettingTab {
                     });
             });
         shortcutEl.descEl.innerHTML += `
-This plugin does not have default shortcuts to prevent conflicts. <br>
-Assig shortcuts to commands for different input types.`
+This plugin does not have default shortcuts to prevent shortcut conflicts. <br>
+Assign your own shortcuts to run commands for different input types.`
 
 
         // ------- [API Setting] -------
