@@ -1,5 +1,5 @@
 # Auto Classifier
-<!-- ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hyeonseonam/auto-classifier?style=for-the-badge) ![GitHub all releases](https://img.shields.io/github/downloads/hyeonseonam/auto-classifier/total?style=for-the-badge) -->
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/HyeonseoNam/auto-classifier?style=for-the-badge) ![GitHub all releases](https://img.shields.io/github/downloads/HyeonseoNam/auto-classifier/total?style=for-the-badge)
 
 `Auto Classifier` is an [Obsidian](https://obsidian.md/) plugin that helps you automatically classify tag from your notes using the ChatGPT API. The plugin can analyze your note (It can be title, frontmatter, content or selected area) and suggest relevant tag based on the input with tags in your valut, saving you time and improving your note organization.
 
