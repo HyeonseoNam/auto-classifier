@@ -1,5 +1,5 @@
 import { Plugin, Notice } from "obsidian";
-import { AutoTaggerSettingTab, AutoTaggerSettings, DEFAULT_SETTINGS, OutLocation } from "src/settings";
+import { AutoClassifierSettingTab, AutoClassifierSettings, DEFAULT_SETTINGS, OutLocation } from "src/settings";
 import { ViewManager } from "src/view-manager";
 import { ChatGPT } from 'src/api';
 
@@ -10,8 +10,8 @@ enum InputType {
 	Content
 }
 
-export default class AutoTaggerPlugin extends Plugin {
-	settings: AutoTaggerSettings;
+export default class AutoClassifierPlugin extends Plugin {
+	settings: AutoClassifierSettings;
 	viewManager = new ViewManager(this.app);
 
 	async onload() {
@@ -47,7 +47,7 @@ export default class AutoTaggerPlugin extends Plugin {
 			}
 		});
 
-		this.addSettingTab(new AutoTaggerSettingTab(this.app, this));
+		this.addSettingTab(new AutoClassifierSettingTab(this.app, this));
 	}
 
 	async loadSettings() {

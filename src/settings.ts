@@ -1,6 +1,6 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import { ChatGPT } from 'src/api';
-import type AutoTaggerPlugin from "src/main";
+import type AutoClassifierPlugin from "src/main";
 import { DEFAULT_CHAT_ROLE, DEFAULT_PROMPT_TEMPLATE } from 'src/template'
 
 export enum ReferenceType {
@@ -33,13 +33,13 @@ export interface CommandOption {
 }
 
 
-export class AutoTaggerSettings {
+export class AutoClassifierSettings {
     apiKey: string;
     apiKeyCreatedAt: Date | null;
     commandOption: CommandOption;
 }
 
-export const DEFAULT_SETTINGS: AutoTaggerSettings = {
+export const DEFAULT_SETTINGS: AutoClassifierSettings = {
     apiKey: '',
     apiKeyCreatedAt: null,
     commandOption: {
@@ -58,9 +58,9 @@ export const DEFAULT_SETTINGS: AutoTaggerSettings = {
     },
 };
 
-export class AutoTaggerSettingTab extends PluginSettingTab {
-    plugin: AutoTaggerPlugin;
-    constructor(app: App, plugin: AutoTaggerPlugin) {
+export class AutoClassifierSettingTab extends PluginSettingTab {
+    plugin: AutoClassifierPlugin;
+    constructor(app: App, plugin: AutoClassifierPlugin) {
         super(app, plugin);
         this.plugin = plugin;
     }
