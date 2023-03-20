@@ -1,5 +1,5 @@
 {
-	"name": "auto-tagger",
+	"name": "auto-classifier",
 	"version": "1.0.0",
 	"description": "This plugin allows you to to automatically assign tags based on the note (title, content or selected area) using chatGPT.",
 	"main": "main.js",
