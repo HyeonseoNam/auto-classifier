@@ -42,7 +42,14 @@ export class ViewManager {
     async getContent(): Promise<string | null> {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView) {
-            return activeView.getViewData();
+            // delete frontmatter
+            let content = activeView.getViewData();
+            const file = activeView.file;
+            const frontmatter: FrontMatterCache | undefined = this.app.metadataCache.getFileCache(file)?.frontmatter;
+            if (frontmatter) {
+                content = content.split('---').slice(2).join('---');
+            }
+            return content;
         }
         return null;
     }
