@@ -44,3 +44,68 @@ h1 {
     width: 100%;
     height: 20em;
 }
+
+
+.loading-container {
+    display: flex;
+    align-items: center;
+  }
+  
+.loading-icon {
+    display: inline-block;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-left-color: var(--text-muted);
+    border-top-color: var(--text-accent);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+.checkmark-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .checkmark {
+    width: 24px;
+    height: 24px;
+    position: relative;
+    margin-right: 8px;
+  }
+  
+  .checkmark:after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 3px;
+    background-color: var(--text-accent);
+    transform-origin: left top;
+    transform: rotate(45deg);
+    top: 8px;
+    left: 6px;
+  }
+  
+  .checkmark:before {
+    content: '';
+    position: absolute;
+    width: 5px;
+    height: 3px;
+    background-color: var(--text-accent);
+    transform-origin: left bottom;
+    transform: rotate(-45deg);
+    bottom: 8px;
+    left: 11px;
+  }

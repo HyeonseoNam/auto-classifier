@@ -22,28 +22,28 @@ export default class AutoTaggerPlugin extends Plugin {
         id: 'classify-tag-selected',
         name: 'Classify tag from Selected Area', 
         callback: async () => {
-          await this.classifyTag(InputType.SelectedArea);
+          await this.runClassifyTag(InputType.SelectedArea);
         }
       });
       this.addCommand({
         id: 'classify-tag-title',
         name: 'Classify tag from Note Title', 
         callback: async () => {
-          await this.classifyTag(InputType.Title);
+          await this.runClassifyTag(InputType.Title);
         }
       });
       this.addCommand({
         id: 'classify-tag-frontmatter',
         name: 'Classify tag from FrontMatter', 
         callback: async () => {
-          await this.classifyTag(InputType.FrontMatter);
+          await this.runClassifyTag(InputType.FrontMatter);
         }
       });
       this.addCommand({
         id: 'classify-tag-content',
         name: 'Classify tag from Note Content', 
         callback: async () => {
-          await this.classifyTag(InputType.Content);
+          await this.runClassifyTag(InputType.Content);
         }
       });
 
@@ -60,15 +60,24 @@ export default class AutoTaggerPlugin extends Plugin {
     async onunload() {
     }
     
+    async runClassifyTag(inputType: InputType) {
+      const loadingNotice = this.createLoadingNotice(`${this.manifest.name}: Processing..`);
+      try {
+        await this.classifyTag(inputType);
+        loadingNotice.hide();
+      } catch(err) {
+        loadingNotice.hide();
+      }
+    }
+
     // Main Classification
     async classifyTag(inputType: InputType) {
-      new Notice(`${this.manifest.name}: Processing..`);
       const commandOption = this.settings.commandOption;
       // ------- [Input] -------
       const refs = this.settings.commandOption.refs;
       // reference check
       if (!refs || refs.length == 0) {
-        new Notice(`[Error] ${this.manifest.name}: no reference tags`);
+        new Notice(`⛔ ${this.manifest.name}: no reference tags`);
         return null
       }
 
@@ -89,7 +98,7 @@ export default class AutoTaggerPlugin extends Plugin {
       
       // input error
       if (!input) {
-        new Notice(`[Error] ${this.manifest.name}: no input data`);
+        new Notice(`⛔ ${this.manifest.name}: no input data`);
         return null; 
       }
       
@@ -113,7 +122,7 @@ export default class AutoTaggerPlugin extends Plugin {
         const resJson = JSON.parse(match[0]);
         // Property check
         if (!resJson.hasOwnProperty('output') || !resJson.hasOwnProperty('reliability')) {
-          new Notice(`[Error] ${this.manifest.name}: output format error (No 'output' and 'reliability' key)`);
+          new Notice(`⛔ ${this.manifest.name}: output format error (No 'output' and 'reliability' key)`);
           return null;
         }
         resOutput = resJson.output;
@@ -127,14 +136,14 @@ export default class AutoTaggerPlugin extends Plugin {
           resOutput = String(responseRaw.match(resOutputRegex)?.[1]);
           resReliabity = parseFloat(String(responseRaw.match(resReliabityRegex)?.[1]));
         } catch (err) {
-          new Notice(`[Error] ${this.manifest.name}: output format error`);
+          new Notice(`⛔ ${this.manifest.name}: output format error`);
           return null;
         }
       }
       
       // Avoid row reliability
       if (resReliabity <= 0.2) {
-        new Notice(`[Error] ${this.manifest.name}: response has row reliability (${resReliabity})`);
+        new Notice(`⛔ ${this.manifest.name}: response has row reliability (${resReliabity})`);
         return null;
       }
 
@@ -142,19 +151,39 @@ export default class AutoTaggerPlugin extends Plugin {
       // FrontMatter
       if (commandOption.outLocation == OutLocation.FrontMatter) {
         this.viewManager.insertAtFrontMatter(commandOption.key, resOutput, commandOption.overwrite);
-        new Notice(`[Success] ${this.manifest.name}: classified to ${resOutput} at FrontMatter[${commandOption.key}]`);
+        new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at FrontMatter[${commandOption.key}]`);
       } 
       // Title
       else if (commandOption.outLocation == OutLocation.Title) {
         this.viewManager.insertAtTitle(resOutput, commandOption.overwrite);
-        new Notice(`[Success] ${this.manifest.name}: classified to ${resOutput} at Title`);
+        new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at Title`);
       }
       // Cursor
       else if (commandOption.outLocation == OutLocation.Cursor) {
         this.viewManager.insertAtCursor(resOutput, commandOption.overwrite);
-        new Notice(`[Success] ${this.manifest.name}: classified to ${resOutput} at Current Cursor`);
+        new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at Current Cursor`);
       }
       
     }
+
+    // create loading spin in the Notice message
+    createLoadingNotice(text: string, number=10000): Notice {
+      const notice = new Notice('', number);
+      const loadingContainer = document.createElement('div');
+      loadingContainer.addClass('loading-container');
+
+      const loadingIcon = document.createElement('div');
+      loadingIcon.addClass('loading-icon');
+      const loadingText = document.createElement('span');
+      loadingText.textContent = text;
+    
+      notice.noticeEl.empty();
+      loadingContainer.appendChild(loadingIcon);
+      loadingContainer.appendChild(loadingText);
+      notice.noticeEl.appendChild(loadingContainer);
+    
+      return notice;
+    }
   }
   
+
