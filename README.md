@@ -1,7 +1,7 @@
 # Auto Classifier
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/HyeonseoNam/auto-classifier?style=for-the-badge) ![GitHub all releases](https://img.shields.io/github/downloads/HyeonseoNam/auto-classifier/total?style=for-the-badge)
 
-`Auto Classifier` is an [Obsidian](https://obsidian.md/) plugin that helps you automatically classify tag from your notes using the ChatGPT API. The plugin can analyze your note (It can be title, frontmatter, content or selected area) and suggest relevant tag based on the input with tags in your valut, saving you time and improving your note organization.
+`Auto Classifier` is an [Obsidian](https://obsidian.md/) plugin that helps you automatically classify tag from your notes using the ChatGPT API. The plugin can analyze your note (It can be title, frontmatter, content or selected area) and suggest relevant tag based on the input with tags in your valut. This can be used for various and specific purposes, for example, DDC classification for books, keyword recommendation, research paper categorization and so on. Save you time and improving your note organization.
 
 
 ## How to use
@@ -28,7 +28,7 @@
   - `Custom Prompt Template`
     - ChatGPT will respond based on this prompt. The input coming from your Command will be replaced by `{{input}}`, and the reference tags you set will be placed in `{{reference}}`.
   - `Custom Chat Role`
-    - You can guide ChatGPT's behabior by setting this system role"
+    - You can guide ChatGPT's behabior by setting this system role
 
 
 ## Example
