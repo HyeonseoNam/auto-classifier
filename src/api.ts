@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 export class ChatGPT {
 	private static baseUrl = 'https://api.openai.com/v1/chat/completions';
 
@@ -12,10 +13,10 @@ export class ChatGPT {
 		frequency_penalty = 0,
 		presence_penalty = 0.5): Promise<string> {
 
-		const headers = new Headers({
+		const headers = {
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${apiKey}`,
-		});
+		};
 
 		const body = JSON.stringify({
 			model: 'gpt-3.5-turbo',
@@ -33,18 +34,18 @@ export class ChatGPT {
 			presence_penalty: presence_penalty
 		});
 
-		const response = await fetch(`${this.baseUrl}`, {
+		const response = await requestUrl({
+			url: this.baseUrl,
 			method: 'POST',
 			headers: headers,
 			body: body,
 		});
 
-		if (!response.ok) {
-			throw new Error(`API call error: ${response.statusText}`);
+		if (response.status >= 400) {
+			throw new Error(`API call error: ${response.status}`);
 		}
 
-		const data = await response.json();
-		// return data.choices[0].text.trim();
+		const data = JSON.parse(response.text);
 		return data.choices[0].message.content;
 	}
 }
