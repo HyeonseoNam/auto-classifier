@@ -86,9 +86,9 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                         tab.updateHotkeyVisibility();
                     });
             });
-        shortcutEl.descEl.innerHTML += `
-This plugin does not have default shortcuts to prevent shortcut conflicts. <br>
-Assign your own shortcuts to run commands for different input types.`
+        shortcutEl.descEl.createSpan({text: 'This plugin does not have default shortcuts to prevent shortcut conflicts.'});
+        shortcutEl.descEl.createEl('br');
+        shortcutEl.descEl.createSpan({text: 'Assign your own shortcuts to run commands for different input types.'});
 
 
         // ------- [API Setting] -------
@@ -107,7 +107,8 @@ Assign your own shortcuts to run commands for different input types.`
                     })
             )
         // API Key Description & Message
-        apiKeySetting.descEl.innerHTML += 'Enter your ChatGPT API key. If you don\'t have one yet, you can create it at <a href="https://platform.openai.com/account/api-keys">here</a>';
+        apiKeySetting.descEl.createSpan({text: 'Enter your ChatGPT API key. If you don\'t have one yet, you can create it at '});
+        apiKeySetting.descEl.createEl('a', {href: 'https://platform.openai.com/account/api-keys', text: 'here'})
         const apiTestMessageEl = document.createElement('div');
         apiKeySetting.descEl.appendChild(apiTestMessageEl);
 
@@ -315,13 +316,17 @@ Assign your own shortcuts to run commands for different input types.`
                             this.display();
                         })
                 });
-
-            customPromptTemplateEl.descEl.innerHTML += `
-This plugin is based on the ChatGPT answer.<br>
-You can use your own template when making a request to ChatGPT.<br><br>
-Variables:<br>
-- {{input}}: The text to classify will be inserted here.<br>
-- {{reference}}: The reference tags will be inserted here.<br>`;
+            customPromptTemplateEl.descEl.createSpan({text: 'This plugin is based on the ChatGPT answer.'});
+            customPromptTemplateEl.descEl.createEl('br');
+            customPromptTemplateEl.descEl.createSpan({text: 'You can use your own template when making a request to ChatGPT.'});
+            customPromptTemplateEl.descEl.createEl('br');
+            customPromptTemplateEl.descEl.createEl('br');
+            customPromptTemplateEl.descEl.createSpan({text: 'Variables:'});
+            customPromptTemplateEl.descEl.createEl('br');
+            customPromptTemplateEl.descEl.createSpan({text: '- {{input}}: The text to classify will be inserted here.'});
+            customPromptTemplateEl.descEl.createEl('br');
+            customPromptTemplateEl.descEl.createSpan({text: '- {{reference}}: The reference tags will be inserted here.'});
+            customPromptTemplateEl.descEl.createEl('br');
 
             const customChatRoleEl = new Setting(containerEl)
                 .setName('Custom Chat Role')
@@ -348,15 +353,8 @@ Variables:<br>
                             this.display();
                         })
                 });
-
-            customChatRoleEl.descEl.innerHTML += `
-Define custom role to ChatGPT system.`
+                customChatRoleEl.descEl.createSpan({text: 'Define custom role to ChatGPT system.'});
         }
-
-
-
-
-
     }
 
 
