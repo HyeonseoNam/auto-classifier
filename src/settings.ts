@@ -82,7 +82,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                         app.setting.openTabById("hotkeys");
                         // @ts-ignore
                         const tab = app.setting.activeTab;
-                        tab.searchInputEl.value = `${this.plugin.manifest.name}:`;
+                        tab.setQuery(this.plugin.manifest.id);
                         tab.updateHotkeyVisibility();
                     });
             });
