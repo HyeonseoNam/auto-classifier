@@ -1,3 +1,4 @@
+import { DiffieHellmanGroup } from "crypto";
 import { App, MarkdownView, Editor, FrontMatterCache } from "obsidian";
 import { OutType } from "src/settings";
 
@@ -125,4 +126,23 @@ export class ViewManager {
         }
     }
 
+    async insertAtContentTop(value: string, outType: OutType, prefix = '', suffix = ''): Promise<void> {
+        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        let output = '';
+        if (outType == OutType.Tag) output = ` #${value} `;
+        else if (outType == OutType.Wikilink) output = `${prefix}[[${value}]]${suffix}\n`;
+        
+        if (activeView) {
+            const editor = activeView.editor;
+            const file = activeView.file;
+            const sections = this.app.metadataCache.getFileCache(file)?.sections;
+            
+            let topLine = 0; 
+            if (sections && sections[0].type == "yaml") {
+                topLine = sections[0].position.end.line + 1;
+            }
+            editor.setCursor({line: topLine, ch: 0});
+            editor.replaceSelection(output);
+        }
+    }
 }

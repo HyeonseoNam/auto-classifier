@@ -168,6 +168,11 @@ export default class AutoClassifierPlugin extends Plugin {
 			this.viewManager.insertAtCursor(resOutput, commandOption.overwrite, commandOption.outType);
 			new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at Current Cursor`);
 		}
+		// ContentTop
+		else if (commandOption.outLocation == OutLocation.ContentTop) {
+			this.viewManager.insertAtContentTop(resOutput, commandOption.outType);
+			new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at Top of Content`);
+		}
 
 	}
 

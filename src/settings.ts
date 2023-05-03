@@ -13,6 +13,7 @@ export enum OutLocation {
     Cursor,
     Title,
     FrontMatter,
+    ContentTop,
 }
 
 // export enum OutLocation_link {
@@ -279,6 +280,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                     cb.addOption(String(OutLocation.Cursor), 'Current Cursor')
                         .addOption(String(OutLocation.Title), 'Title alternative')    
                         .addOption(String(OutLocation.FrontMatter), 'FrontMatter')
+                        .addOption(String(OutLocation.ContentTop), 'Top of Content')
                         .setValue(String(commandOption.outLocation))
                         .onChange(async (value) => {
                             commandOption.outLocation = parseInt(value);
@@ -332,7 +334,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                 .setDesc('Specify where to put the output wikilink')
                 .addDropdown((cb) => {
                     cb.addOption(String(OutLocation.Cursor), 'Current Cursor')
-                        // .addOption(String(OutLocation.ContentTop), 'Top of Content')
+                        .addOption(String(OutLocation.ContentTop), 'Top of Content')
                         .setValue(String(commandOption.outLocation))
                         .onChange(async (value) => {
                             commandOption.outLocation = parseInt(value);
