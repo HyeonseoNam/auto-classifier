@@ -117,34 +117,18 @@ export default class AutoClassifierPlugin extends Plugin {
 		// ------- [API Processing] -------
 		// Call API
 		const responseRaw = await ChatGPT.callAPI(system_role, user_prompt, this.settings.apiKey);
-
-		// String type to JSON type
-		const regexToJson = /\{([^}]+)\}/g;
-		const match = responseRaw.match(regexToJson);
+		const jsonRegex = /reliability.*\s*:\s*([\d.]+).*output.*\s*:\s*"?([^"^}]+)/;
+		const match = responseRaw.match(jsonRegex);
 		let resOutput;
 		let resReliabity;
 		if (match) {
-			const resJson = JSON.parse(match[0]);
-			// Property check
-			if (!resJson.hasOwnProperty('output') || !resJson.hasOwnProperty('reliability')) {
-				new Notice(`⛔ ${this.manifest.name}: output format error (No 'output' and 'reliability' key)`);
-				return null;
-			}
-			resOutput = resJson.output;
-			resReliabity = resJson.reliability;
-		} else
-			if (!match) {
-				// Property check
-				const resOutputRegex = /utput:\s*([^\n\r]+)/;
-				const resReliabityRegex = /eliability:\s*([^\n\r]+)/;
-				try {
-					resOutput = String(responseRaw.match(resOutputRegex)?.[1]);
-					resReliabity = parseFloat(String(responseRaw.match(resReliabityRegex)?.[1]));
-				} catch (err) {
-					new Notice(`⛔ ${this.manifest.name}: output format error`);
-					return null;
-				}
-			}
+			resOutput = match[2];
+			resReliabity = parseFloat(match[1]);
+		} else {
+			new Notice(`⛔ ${this.manifest.name}: output format error`);
+			return null;
+		}
+		
 
 		// Avoid row reliability
 		if (resReliabity <= 0.2) {
