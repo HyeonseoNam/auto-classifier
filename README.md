@@ -14,15 +14,18 @@
   - `Classify tag from Note Content` 
   - `Classify tag from Selected Area`
 
-- Choose from different **Tag Reference** types. ChatGPT will select the appropriate tag from these references.
+- Toggle and Choose from different **Tag Reference** types. ChatGPT will select the appropriate tag from these references.
   - `All tags` (default)
   - `Filtered Tags` with regular expression
   - `Manual Tags` that defined manually
-  
-- Specify the **Output Location** for the generated tag and decide whether it **overwrites**:
-  - At `FrontMatter` (with specified key)
-  - At `Title`
-  - At `Current Cursor`
+
+- Specify the **Output Type** from the response of ChatGPT.
+  - `#Tag`: at your `Current Cursor` or `Top of Content`.
+  - `[[WikiLink]]`: at your `Current Cursor` or `Top of Content`.
+  - `FrontMatter`: with `key`
+  - `Title Alternative`: at the end of note's title
+
+- (Optional) Add `Prefix` or `Suffix` for the output format.
 
 - (Optional) Your can use your custom request for the ChatGPT API.
   - `Custom Prompt Template`
@@ -44,6 +47,30 @@
 ### Use Case #4: **Title** &rightarrow; **FrontMatter**
 ![](img/title_to_frontmatter.gif)
 
+
+### DDC number classification
+If you want use this plugin as DDC number classification, edit `Custom Prompt Template` like this:
+```
+Please use Dewey Decimal Classification (DDC) to classify this content:
+"""
+{{input}}
+"""
+Answer format is JSON {reliability:0~1, output:"[ddc_number]:category"}. 
+Even if you are not sure, qualify the reliability and select one. 
+Convert the blank spaces to "_" in the output.
+```
+
+### LCSH classification
+LCSH classification can be similar: 
+```
+Please use Library of Congress Subject Headings (LCSH) to classify this content:
+"""
+{{input}}
+"""
+Answer format is JSON {reliability:0~1, output:"[First LCSH term]--[Second LCSH term]--[Third LCSH term]"}. 
+Even if you are not sure, qualify the reliability and select one. 
+Convert the blank spaces to "_" in the output.
+```
 
 ## Installation
 
