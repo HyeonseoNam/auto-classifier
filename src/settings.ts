@@ -1,7 +1,7 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import { ChatGPT } from 'src/api';
 import type AutoClassifierPlugin from "src/main";
-import { DEFAULT_CHAT_ROLE, DEFAULT_PROMPT_TEMPLATE } from 'src/template'
+import { DEFAULT_CHAT_ROLE, DEFAULT_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE_WO_REF } from 'src/template'
 
 export enum ReferenceType {
     All,
@@ -142,80 +142,97 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
         // ------- [Tag Reference Setting] -------
         containerEl.createEl('h1', { text: 'Tag Reference Setting' });
 
-        // Tag Reference Type Dropdown
+        // Toggle tag reference
         new Setting(containerEl)
-            .setName('Reference type')
-            .setDesc('Choose the type of reference tag')
-            .addDropdown((dropdown) => {
-                dropdown
-                    .addOption(String(ReferenceType.All), "All tags")
-                    .addOption(String(ReferenceType.Filter), "Filtered tags",)
-                    .addOption(String(ReferenceType.Manual), "Manual tags")
-                    .setValue(String(commandOption.refType))
-                    .onChange(async (refTye) => {
-                        this.setRefType(parseInt(refTye));
-                        this.setRefs(parseInt(refTye));
+            .setName('Use Reference')
+            .setDesc('If not, it will recommend new tags')
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(commandOption.useRef)
+                    .onChange(async (value) => {
+                        commandOption.useRef = value;
                         this.display();
-                    });
-            });
+                    }),
+            );
 
-        // All tags - default setting
-        if (commandOption.refType == ReferenceType.All) {
-            this.setRefs(ReferenceType.All);
-        }
-        // Filtered tags - Regex setting
-        if (commandOption.refType == ReferenceType.Filter) {
+        if (commandOption.useRef) {
+            // Tag Reference Type Dropdown
             new Setting(containerEl)
-                .setName('Filter regex')
-                .setDesc('Specify a regular expression to filter tags')
+                .setName('Reference type')
+                .setDesc('Choose the type of reference tag')
                 .setClass('setting-item-child')
-                .addText((text) =>
-                    text
-                        .setPlaceholder('Regular expression')
-                        .setValue(commandOption.filterRegex)
-                        .onChange(async (value) => {
-                            this.setRefs(ReferenceType.Filter, value);
-                        })
-                );
-        }
-        // Manual tags - manual input text area
-        else if (commandOption.refType == ReferenceType.Manual) {
-            new Setting(containerEl)
-                .setName('Manual tags')
-                .setDesc('Manually specify tags to reference.')
-                .setClass('setting-item-child')
-                .setClass('height10-text-area')
-                .addTextArea((text) => {
-                    text
-                        .setPlaceholder('Tags')
-                        .setValue(commandOption.manualRefs?.join('\n'))
-                        .onChange(async (value) => {
-                            this.setRefs(ReferenceType.Manual, value);
-                        })
-                })
-                .addExtraButton(cb => {
-                    cb
-                        .setIcon('reset')
-                        .setTooltip('Bring All Tags')
-                        .onClick(async () => {
-                            const allTags = await this.plugin.viewManager.getTags() ?? [];
-                            commandOption.manualRefs = allTags;
-                            this.setRefs(ReferenceType.Manual);
+                .addDropdown((dropdown) => {
+                    dropdown
+                        .addOption(String(ReferenceType.All), "All tags")
+                        .addOption(String(ReferenceType.Filter), "Filtered tags",)
+                        .addOption(String(ReferenceType.Manual), "Manual tags")
+                        .setValue(String(commandOption.refType))
+                        .onChange(async (refTye) => {
+                            this.setRefType(parseInt(refTye));
+                            this.setRefs(parseInt(refTye));
                             this.display();
-                        })
+                        });
+                });
+
+            // All tags - default setting
+            if (commandOption.refType == ReferenceType.All) {
+                this.setRefs(ReferenceType.All);
+            }
+            // Filtered tags - Regex setting
+            if (commandOption.refType == ReferenceType.Filter) {
+                new Setting(containerEl)
+                    .setName('Filter regex')
+                    .setDesc('Specify a regular expression to filter tags')
+                    .setClass('setting-item-child')
+                    .addText((text) =>
+                        text
+                            .setPlaceholder('Regular expression')
+                            .setValue(commandOption.filterRegex)
+                            .onChange(async (value) => {
+                                this.setRefs(ReferenceType.Filter, value);
+                            })
+                    );
+            }
+            // Manual tags - manual input text area
+            else if (commandOption.refType == ReferenceType.Manual) {
+                new Setting(containerEl)
+                    .setName('Manual tags')
+                    .setDesc('Manually specify tags to reference.')
+                    .setClass('setting-item-child')
+                    .setClass('height10-text-area')
+                    .addTextArea((text) => {
+                        text
+                            .setPlaceholder('Tags')
+                            .setValue(commandOption.manualRefs?.join('\n'))
+                            .onChange(async (value) => {
+                                this.setRefs(ReferenceType.Manual, value);
+                            })
+                    })
+                    .addExtraButton(cb => {
+                        cb
+                            .setIcon('reset')
+                            .setTooltip('Bring All Tags')
+                            .onClick(async () => {
+                                const allTags = await this.plugin.viewManager.getTags() ?? [];
+                                commandOption.manualRefs = allTags;
+                                this.setRefs(ReferenceType.Manual);
+                                this.display();
+                            })
+                    });
+            }
+
+            // View Reference Tags button
+            new Setting(containerEl)
+                .setClass('setting-item-child')
+                .addButton((cb) => {
+                    cb.setButtonText('View Reference Tags')
+                        .onClick(async () => {
+                            const tags = commandOption.refs ?? [];
+                            new Notice(`${tags.join('\n')}`);
+                        });
                 });
         }
-
-        // View Reference Tags button
-        new Setting(containerEl)
-            .setClass('setting-item-child')
-            .addButton((cb) => {
-                cb.setButtonText('View Reference Tags')
-                    .onClick(async () => {
-                        const tags = commandOption.refs ?? [];
-                        new Notice(`${tags.join('\n')}`);
-                    });
-            });
+        
 
 
 
@@ -291,6 +308,14 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
 
         // Custom template textarea
         if (commandOption.useCustomCommand) {
+            
+            // Different default template depanding on useRef
+            if (commandOption.useRef) {
+                if(commandOption.prmpt_template == DEFAULT_PROMPT_TEMPLATE_WO_REF) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
+            } else {
+                if(commandOption.prmpt_template == DEFAULT_PROMPT_TEMPLATE) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE_WO_REF;
+            }
+
             const customPromptTemplateEl = new Setting(containerEl)
                 .setName('Custom Prompt Template')
                 .setDesc('')
@@ -311,7 +336,10 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                         .setIcon('reset')
                         .setTooltip('Restore to default')
                         .onClick(async () => {
-                            commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
+                            // Different default template depanding on useRef
+                            if (commandOption.useRef) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
+                            else commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE_WO_REF;
+                            
                             await this.plugin.saveSettings();
                             this.display();
                         })
