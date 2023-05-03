@@ -10,9 +10,19 @@ export enum ReferenceType {
 }
 
 export enum OutLocation {
-    FrontMatter,
-    Title,
     Cursor,
+    Title,
+    FrontMatter,
+}
+
+// export enum OutLocation_link {
+//     Cursor,
+//     // ContentTop,
+// }
+
+export enum OutType {
+    Tag,
+    Wikilink,
 }
 
 // for tag, keyword
@@ -23,6 +33,8 @@ export interface CommandOption {
     refType: ReferenceType;
     filterRegex: string; // for ReferenceType - Filter
     outLocation: OutLocation;
+    // outLocation_link: OutLocation_link;
+    outType: OutType;
     key: string; // for OutLocation - FrontMatter
     overwrite: boolean; // for OutLocation - FrontMatter
 
@@ -48,7 +60,9 @@ export const DEFAULT_SETTINGS: AutoClassifierSettings = {
         manualRefs: [],
         refType: ReferenceType.All,
         filterRegex: '',
-        outLocation: OutLocation.FrontMatter,
+        outLocation: OutLocation.Cursor,
+        // outLocation_link: OutLocation_link.Cursor,
+        outType: OutType.Tag,
         key: 'tags',
         overwrite: false,
         useCustomCommand: false,
@@ -236,62 +250,116 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
 
 
 
-        // ------- [Output Tag Setting] -------
-        // Tag Location dropdown
-        containerEl.createEl('h1', { text: 'Output Tag Setting' });
+        // ------- [Output Setting] -------
+        containerEl.createEl('h1', { text: 'Output Setting' });
+        
+        // Output type dropdown
         new Setting(containerEl)
-            .setName('Output Tag Location')
-            .setDesc('Specify where to put the output tag')
+            .setName('Output Type')
+            .setDesc('Specify output type')
             .addDropdown((cb) => {
-                cb.addOption(String(OutLocation.FrontMatter), 'FrontMatter')
-                    .addOption(String(OutLocation.Title), 'Title alternative')
-                    .addOption(String(OutLocation.Cursor), 'Current cursor')
-                    .setValue(String(commandOption.outLocation))
+                cb.addOption(String(OutType.Tag), '#Tag')
+                    .addOption(String(OutType.Wikilink), '[[Wikilink]]')
+                    .setValue(String(commandOption.outType))
                     .onChange(async (value) => {
-                        commandOption.outLocation = parseInt(value);
+                        commandOption.outType = parseInt(value);
+                        commandOption.outLocation = 0; // Initialize
                         await this.plugin.saveSettings();
                         this.display();
                     });
             });
-
-        // Frontmatter - key text setting
-        let overwriteName = '';
-        if (commandOption.outLocation == OutLocation.FrontMatter) {
-            overwriteName = 'Overwrite value of the key';
+        
+        // Output Tag - 
+        if (commandOption.outType == OutType.Tag) {
+            // Tag - Location dropdown
             new Setting(containerEl)
-                .setName('FrontMatter key')
-                .setDesc('Specify FrontMatter key to put the output tag')
-                .setClass('setting-item-child')
-                .addText((text) =>
-                    text
-                        .setPlaceholder('Key')
-                        .setValue(commandOption.key)
+                .setName('Output Location')
+                .setDesc('Specify where to put the output tag')
+                .addDropdown((cb) => {
+                    cb.addOption(String(OutLocation.Cursor), 'Current Cursor')
+                        .addOption(String(OutLocation.Title), 'Title alternative')    
+                        .addOption(String(OutLocation.FrontMatter), 'FrontMatter')
+                        .setValue(String(commandOption.outLocation))
                         .onChange(async (value) => {
-                            commandOption.key = value;
+                            commandOption.outLocation = parseInt(value);
+                            await this.plugin.saveSettings();
+                            this.display();
+                        });
+                });
+
+            // Frontmatter - key text setting
+            let overwriteName = '';
+            if (commandOption.outLocation == OutLocation.FrontMatter) {
+                overwriteName = 'Overwrite value of the key';
+                new Setting(containerEl)
+                    .setName('FrontMatter key')
+                    .setDesc('Specify FrontMatter key to put the output tag')
+                    .setClass('setting-item-child')
+                    .addText((text) =>
+                        text
+                            .setPlaceholder('Key')
+                            .setValue(commandOption.key)
+                            .onChange(async (value) => {
+                                commandOption.key = value;
+                                await this.plugin.saveSettings();
+                            })
+                    );
+            }
+            else if (commandOption.outLocation == OutLocation.Title) {
+                overwriteName = 'Overwrite whole title';
+            }
+            else if (commandOption.outLocation == OutLocation.Cursor) {
+                overwriteName = 'Overwrite selected area if selected';
+            }
+
+            // Overwrite toggle
+            new Setting(containerEl)
+                .setName(overwriteName)
+                .setClass('setting-item-child')
+                .addToggle((toggle) =>
+                    toggle
+                        .setValue(commandOption.overwrite)
+                        .onChange(async (value) => {
+                            commandOption.overwrite = value;
                             await this.plugin.saveSettings();
                         })
                 );
         }
-        else if (commandOption.outLocation == OutLocation.Title) {
-            overwriteName = 'Overwrite whole title';
+        else if (commandOption.outType == OutType.Wikilink) {
+            // Wikilink - Location dropdown
+            new Setting(containerEl)
+                .setName('Output Location')
+                .setDesc('Specify where to put the output wikilink')
+                .addDropdown((cb) => {
+                    cb.addOption(String(OutLocation.Cursor), 'Current Cursor')
+                        // .addOption(String(OutLocation.ContentTop), 'Top of Content')
+                        .setValue(String(commandOption.outLocation))
+                        .onChange(async (value) => {
+                            commandOption.outLocation = parseInt(value);
+                            await this.plugin.saveSettings();
+                            this.display();
+                        });
+                });
+            
+            // Set overwriteName
+            let overwriteName = '';
+            if (commandOption.outLocation == OutLocation.Cursor) {
+                overwriteName = 'Overwrite selected area if selected';
+            }
+            // Overwrite toggle
+            new Setting(containerEl)
+                .setName(overwriteName)
+                .setClass('setting-item-child')
+                .addToggle((toggle) =>
+                    toggle
+                        .setValue(commandOption.overwrite)
+                        .onChange(async (value) => {
+                            commandOption.overwrite = value;
+                            await this.plugin.saveSettings();
+                        })
+                );
+            
         }
-        else if (commandOption.outLocation == OutLocation.Cursor) {
-            overwriteName = 'Overwrite selected area';
-        }
-
-        // Overwrite toggle
-        new Setting(containerEl)
-            .setName(overwriteName)
-            .setClass('setting-item-child')
-            .addToggle((toggle) =>
-                toggle
-                    .setValue(commandOption.overwrite)
-                    .onChange(async (value) => {
-                        commandOption.overwrite = value;
-                        await this.plugin.saveSettings();
-                    })
-            );
-
         // ------- [Advanced Setting] -------
         // Toggle custom rule
         containerEl.createEl('h1', { text: 'Advanced Setting' });
@@ -339,7 +407,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                             // Different default template depanding on useRef
                             if (commandOption.useRef) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
                             else commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE_WO_REF;
-                            
+
                             await this.plugin.saveSettings();
                             this.display();
                         })

@@ -1,5 +1,5 @@
 import { Plugin, Notice } from "obsidian";
-import { AutoClassifierSettingTab, AutoClassifierSettings, DEFAULT_SETTINGS, OutLocation } from "src/settings";
+import { AutoClassifierSettingTab, AutoClassifierSettings, DEFAULT_SETTINGS, OutLocation, OutType} from "src/settings";
 import { ViewManager } from "src/view-manager";
 import { ChatGPT } from 'src/api';
 
@@ -165,7 +165,7 @@ export default class AutoClassifierPlugin extends Plugin {
 		}
 		// Cursor
 		else if (commandOption.outLocation == OutLocation.Cursor) {
-			this.viewManager.insertAtCursor(resOutput, commandOption.overwrite);
+			this.viewManager.insertAtCursor(resOutput, commandOption.overwrite, commandOption.outType);
 			new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at Current Cursor`);
 		}
 

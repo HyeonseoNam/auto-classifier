@@ -1,4 +1,5 @@
 import { App, MarkdownView, Editor, FrontMatterCache } from "obsidian";
+import { OutType } from "src/settings";
 
 export class ViewManager {
     app: App;
@@ -106,9 +107,12 @@ export class ViewManager {
         await this.app.fileManager.renameFile(file, newPath);
     }
 
-    async insertAtCursor(value: string, overwrite = false): Promise<void> {
+    async insertAtCursor(value: string, overwrite = false, outType: OutType): Promise<void> {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        let tag = ` #${value} `;
+        let output = '';
+        if (outType == OutType.Tag) output = ` #${value} `;
+        else if (outType == OutType.Wikilink) output = `[[${value}]]`;
+        
         if (activeView) {
             const editor = activeView.editor;
             const selection = editor.getSelection();
@@ -117,7 +121,7 @@ export class ViewManager {
                 editor.setSelection(editor.getCursor('to'));
             }
             // overwrite
-            editor.replaceSelection(tag);
+            editor.replaceSelection(output);
         }
     }
 
