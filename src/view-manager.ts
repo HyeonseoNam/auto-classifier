@@ -1,4 +1,3 @@
-import { DiffieHellmanGroup } from "crypto";
 import { App, MarkdownView, Editor, FrontMatterCache } from "obsidian";
 import { OutType } from "src/settings";
 
@@ -70,9 +69,10 @@ export class ViewManager {
         return tags;
     }
 
-    async insertAtFrontMatter(key: string, value: string, overwrite = false): Promise<void> {
+    async insertAtFrontMatter(key: string, value: string, overwrite = false, prefix = '', suffix = ''): Promise<void> {
+        value = `${prefix}${value}${suffix}`;
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-
+        
         if (activeView) {
             const file = activeView.file;
             await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
@@ -93,7 +93,8 @@ export class ViewManager {
         }
     }
 
-    async insertAtTitle(value: string, overwrite = false): Promise<void> {
+    async insertAtTitle(value: string, overwrite = false, prefix = '', suffix = ''): Promise<void> {
+        value = `${prefix}${value}${suffix}`;
         const file = this.app.workspace.getActiveFile();
         if (!file) return; 
         let newName = file.basename;
@@ -108,11 +109,9 @@ export class ViewManager {
         await this.app.fileManager.renameFile(file, newPath);
     }
 
-    async insertAtCursor(value: string, overwrite = false, outType: OutType): Promise<void> {
+    async insertAtCursor(value: string, overwrite = false, outType: OutType, prefix = '', suffix = ''): Promise<void> {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        let output = '';
-        if (outType == OutType.Tag) output = ` #${value} `;
-        else if (outType == OutType.Wikilink) output = `[[${value}]]`;
+        const output = this.preprocessOutput(value, outType, prefix, suffix);
         
         if (activeView) {
             const editor = activeView.editor;
@@ -128,21 +127,33 @@ export class ViewManager {
 
     async insertAtContentTop(value: string, outType: OutType, prefix = '', suffix = ''): Promise<void> {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        let output = '';
-        if (outType == OutType.Tag) output = ` #${value} \n`;
-        else if (outType == OutType.Wikilink) output = `${prefix}[[${value}]]${suffix}\n`;
+        const output = this.preprocessOutput(value, outType, prefix, suffix);
         
         if (activeView) {
             const editor = activeView.editor;
             const file = activeView.file;
             const sections = this.app.metadataCache.getFileCache(file)?.sections;
             
+            // get the line after frontmatter
             let topLine = 0; 
             if (sections && sections[0].type == "yaml") {
                 topLine = sections[0].position.end.line + 1;
             }
+
+            // replace top of the content
             editor.setCursor({line: topLine, ch: 0});
-            editor.replaceSelection(output);
+            editor.replaceSelection(`${output}\n`);
         }
+    }
+
+    preprocessOutput(value: string, outType: OutType, prefix = '', suffix = ''): string {
+        let output = '';
+        if (outType == OutType.Tag) {
+            output = `${prefix}${value}${suffix}`;
+            output = output.replace(/ /g, "_");
+            output = ` #${output} `;
+        }
+        else if (outType == OutType.Wikilink) output = `[[${prefix}${value}${suffix}]]`;
+        return output
     }
 }

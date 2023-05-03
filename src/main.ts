@@ -153,27 +153,24 @@ export default class AutoClassifierPlugin extends Plugin {
 		}
 
 		// ------- [Add Tag] -------
-		// FrontMatter
-		if (commandOption.outLocation == OutLocation.FrontMatter) {
-			this.viewManager.insertAtFrontMatter(commandOption.key, resOutput, commandOption.overwrite);
-			new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at FrontMatter[${commandOption.key}]`);
+		// Output Type 1. [Tag Case] + Output Type 2. [Wikilink Case]
+		if (commandOption.outType == OutType.Tag || commandOption.outType == OutType.Wikilink) {
+			if (commandOption.outLocation == OutLocation.Cursor) {
+				this.viewManager.insertAtCursor(resOutput, commandOption.overwrite, commandOption.outType, commandOption.outPrefix, commandOption.outSuffix);
+			} 
+			else if (commandOption.outLocation == OutLocation.ContentTop) {
+				this.viewManager.insertAtContentTop(resOutput, commandOption.outType, commandOption.outPrefix, commandOption.outSuffix);
+			}
 		}
-		// Title
-		else if (commandOption.outLocation == OutLocation.Title) {
-			this.viewManager.insertAtTitle(resOutput, commandOption.overwrite);
-			new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at Title`);
+		// Output Type 3. [Frontmatter Case]
+		else if (commandOption.outType == OutType.FrontMatter) {
+			this.viewManager.insertAtFrontMatter(commandOption.key, resOutput, commandOption.overwrite, commandOption.outPrefix, commandOption.outSuffix);
 		}
-		// Cursor
-		else if (commandOption.outLocation == OutLocation.Cursor) {
-			this.viewManager.insertAtCursor(resOutput, commandOption.overwrite, commandOption.outType);
-			new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at Current Cursor`);
+		// Output Type 4. [Title]
+		else if (commandOption.outType == OutType.Title) {
+			this.viewManager.insertAtTitle(resOutput, commandOption.overwrite, commandOption.outPrefix, commandOption.outSuffix);
 		}
-		// ContentTop
-		else if (commandOption.outLocation == OutLocation.ContentTop) {
-			this.viewManager.insertAtContentTop(resOutput, commandOption.outType);
-			new Notice(`✅ ${this.manifest.name}: classified to ${resOutput} at Top of Content`);
-		}
-
+		new Notice(`✅ ${this.manifest.name}: classified to ${resOutput}`);
 	}
 
 	// create loading spin in the Notice message
