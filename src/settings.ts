@@ -278,9 +278,9 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                 .setDesc('Specify where to put the output tag')
                 .addDropdown((cb) => {
                     cb.addOption(String(OutLocation.Cursor), 'Current Cursor')
+                        .addOption(String(OutLocation.ContentTop), 'Top of Content')
                         .addOption(String(OutLocation.Title), 'Title alternative')    
                         .addOption(String(OutLocation.FrontMatter), 'FrontMatter')
-                        .addOption(String(OutLocation.ContentTop), 'Top of Content')
                         .setValue(String(commandOption.outLocation))
                         .onChange(async (value) => {
                             commandOption.outLocation = parseInt(value);
