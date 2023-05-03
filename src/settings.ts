@@ -290,9 +290,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                 });
 
             // Frontmatter - key text setting
-            let overwriteName = '';
             if (commandOption.outLocation == OutLocation.FrontMatter) {
-                overwriteName = 'Overwrite value of the key';
                 new Setting(containerEl)
                     .setName('FrontMatter key')
                     .setDesc('Specify FrontMatter key to put the output tag')
@@ -307,25 +305,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                             })
                     );
             }
-            else if (commandOption.outLocation == OutLocation.Title) {
-                overwriteName = 'Overwrite whole title';
-            }
-            else if (commandOption.outLocation == OutLocation.Cursor) {
-                overwriteName = 'Overwrite selected area if selected';
-            }
 
-            // Overwrite toggle
-            new Setting(containerEl)
-                .setName(overwriteName)
-                .setClass('setting-item-child')
-                .addToggle((toggle) =>
-                    toggle
-                        .setValue(commandOption.overwrite)
-                        .onChange(async (value) => {
-                            commandOption.overwrite = value;
-                            await this.plugin.saveSettings();
-                        })
-                );
         }
         else if (commandOption.outType == OutType.Wikilink) {
             // Wikilink - Location dropdown
@@ -342,13 +322,18 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                             this.display();
                         });
                 });
-            
-            // Set overwriteName
+        }
+
+        // Overwrite setting
+        if (commandOption.outLocation == OutLocation.FrontMatter ||
+            commandOption.outLocation == OutLocation.Title ||
+            commandOption.outLocation == OutLocation.Cursor) {
+
             let overwriteName = '';
-            if (commandOption.outLocation == OutLocation.Cursor) {
-                overwriteName = 'Overwrite selected area if selected';
-            }
-            // Overwrite toggle
+            if (commandOption.outLocation == OutLocation.FrontMatter) overwriteName = 'Overwrite value of the key.';
+            if (commandOption.outLocation == OutLocation.Title) overwriteName = 'Overwrite whole title. If false, add to end of title.';
+            if (commandOption.outLocation == OutLocation.Cursor) overwriteName = 'Overwrite selected area if selected.';
+
             new Setting(containerEl)
                 .setName(overwriteName)
                 .setClass('setting-item-child')
@@ -360,8 +345,10 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                             await this.plugin.saveSettings();
                         })
                 );
-            
+
         }
+
+
         // ------- [Advanced Setting] -------
         // Toggle custom rule
         containerEl.createEl('h1', { text: 'Advanced Setting' });

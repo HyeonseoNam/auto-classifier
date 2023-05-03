@@ -129,7 +129,7 @@ export class ViewManager {
     async insertAtContentTop(value: string, outType: OutType, prefix = '', suffix = ''): Promise<void> {
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         let output = '';
-        if (outType == OutType.Tag) output = ` #${value} `;
+        if (outType == OutType.Tag) output = ` #${value} \n`;
         else if (outType == OutType.Wikilink) output = `${prefix}[[${value}]]${suffix}\n`;
         
         if (activeView) {
