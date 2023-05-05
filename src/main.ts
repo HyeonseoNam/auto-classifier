@@ -81,7 +81,7 @@ export default class AutoClassifierPlugin extends Plugin {
 		// ------- [Input] -------
 		const refs = this.settings.commandOption.refs;
 		// reference check
-		if (!refs || refs.length == 0) {
+		if (this.settings.commandOption.useRef && (!refs || refs.length == 0)) {
 			new Notice(`⛔ ${this.manifest.name}: no reference tags`);
 			return null
 		}
@@ -121,11 +121,11 @@ export default class AutoClassifierPlugin extends Plugin {
 		const match = responseRaw.match(jsonRegex);
 		let resOutput;
 		let resReliabity;
-		if (match) {
+		if (match && match.length > 1) {
 			resOutput = match[2];
 			resReliabity = parseFloat(match[1]);
 		} else {
-			new Notice(`⛔ ${this.manifest.name}: output format error`);
+			new Notice(`⛔ ${this.manifest.name}: output format error (output: ${responseRaw})`);
 			return null;
 		}
 		

@@ -172,6 +172,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                     .setValue(commandOption.useRef)
                     .onChange(async (value) => {
                         commandOption.useRef = value;
+                        await this.plugin.saveSettings();
                         this.display();
                     }),
             );
@@ -352,6 +353,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                         .onChange(async (value) => {
                             commandOption.overwrite = value;
                             await this.plugin.saveSettings();
+                            this.display();
                         })
                 );
 
@@ -397,6 +399,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                     .setValue(commandOption.useCustomCommand)
                     .onChange(async (value) => {
                         commandOption.useCustomCommand = value;
+                        await this.plugin.saveSettings();
                         this.display();
                     }),
             );
