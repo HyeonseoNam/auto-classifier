@@ -47,6 +47,8 @@ export interface CommandOption {
 
     chat_role: string;
     prmpt_template: string;
+    model: string;
+    max_tokens: number;
 }
 
 
@@ -75,7 +77,9 @@ export const DEFAULT_SETTINGS: AutoClassifierSettings = {
         useCustomCommand: false,
 
         chat_role: DEFAULT_CHAT_ROLE,
-        prmpt_template: DEFAULT_PROMPT_TEMPLATE
+        prmpt_template: DEFAULT_PROMPT_TEMPLATE,
+        model: "gpt-3.5-turbo",
+        max_tokens: 150,
     },
 };
 
@@ -480,6 +484,34 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                         })
                 });
                 customChatRoleEl.descEl.createSpan({text: 'Define custom role to ChatGPT system.'});
+
+            new Setting(containerEl)
+                .setName('Custom Model')
+                .setDesc("ID of the model to use. See https://platform.openai.com/docs/models")
+                .setClass('setting-item-child')
+                .addText((text) =>
+                    text
+                        .setPlaceholder('gpt-3.5-turbo')
+                        .setValue(commandOption.model)
+                        .onChange(async (value) => {
+                            commandOption.model = value;
+                            await this.plugin.saveSettings();
+                        })
+                );
+
+            new Setting(containerEl)
+                .setName('Custom Max Tokens')
+                .setDesc("The maximum number of tokens that can be generated in the completion.")
+                .setClass('setting-item-child')
+                .addText((text) =>
+                    text
+                        .setPlaceholder('150')
+                        .setValue(String(commandOption.max_tokens))
+                        .onChange(async (value) => {
+                            commandOption.max_tokens = parseInt(value);
+                            await this.plugin.saveSettings();
+                        })
+                );
         }
     }
 

@@ -116,7 +116,13 @@ export default class AutoClassifierPlugin extends Plugin {
 
 		// ------- [API Processing] -------
 		// Call API
-		const responseRaw = await ChatGPT.callAPI(system_role, user_prompt, this.settings.apiKey);
+		const responseRaw = await ChatGPT.callAPI(
+			system_role, 
+			user_prompt, 
+			this.settings.apiKey,
+			this.settings.commandOption.model,
+			this.settings.commandOption.max_tokens,
+		);
 		const jsonRegex = /reliability[\s\S]*?:\s*([\d.]+)[\s\S]*?output[\s\S]*?:\s*"([^"^}]+)/;
 		const match = responseRaw.match(jsonRegex);
 		let resOutput;

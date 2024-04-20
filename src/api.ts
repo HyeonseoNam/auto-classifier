@@ -6,12 +6,13 @@ export class ChatGPT {
 		system_role: string,
 		user_prompt: string,
 		apiKey: string,
-		model = "gpt-3.5-turbo",
-		temperature = 0,
-		max_tokens = 150,
-		top_p = 0.95,
-		frequency_penalty = 0,
-		presence_penalty = 0.5): Promise<string> {
+		model: string = 'gpt-3.5-turbo',
+		max_tokens: number = 150,
+		temperature: number = 0,
+		top_p: number = 0.95,
+		frequency_penalty: number = 0,
+		presence_penalty: number = 0.5,
+	): Promise<string> {
 
 		const headers = {
 			'Content-Type': 'application/json',
@@ -19,7 +20,7 @@ export class ChatGPT {
 		};
 
 		const body = JSON.stringify({
-			model: 'gpt-3.5-turbo',
+			model: model,
 			messages: [
 				{ "role": "system", "content": system_role },
 				{ "role": "user", "content": user_prompt },
