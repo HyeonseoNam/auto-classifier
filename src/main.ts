@@ -123,44 +123,55 @@ export default class AutoClassifierPlugin extends Plugin {
 			this.settings.commandOption.model,
 			this.settings.commandOption.max_tokens,
 		);
-		const jsonRegex = /reliability[\s\S]*?:\s*([\d.]+)[\s\S]*?output[\s\S]*?:\s*"([^"^}]+)/;
-		const match = responseRaw.match(jsonRegex);
-		let resOutput;
-		let resReliabity;
-		if (match && match.length > 1) {
-			resOutput = match[2];
-			resReliabity = parseFloat(match[1]);
-		} else {
+		let jsonList;
+		try {
+			jsonList = JSON.parse(responseRaw);
+			if (!Array.isArray(jsonList)) {
+				throw new Error();
+			}
+		} catch (error) {
 			new Notice(`⛔ ${this.manifest.name}: output format error (output: ${responseRaw})`);
 			return null;
 		}
-		
-
-		// Avoid row reliability
-		if (resReliabity <= 0.2) {
-			new Notice(`⛔ ${this.manifest.name}: response has row reliability (${resReliabity})`);
-			return null;
-		}
-
-		// ------- [Add Tag] -------
-		// Output Type 1. [Tag Case] + Output Type 2. [Wikilink Case]
-		if (commandOption.outType == OutType.Tag || commandOption.outType == OutType.Wikilink) {
-			if (commandOption.outLocation == OutLocation.Cursor) {
-				this.viewManager.insertAtCursor(resOutput, commandOption.overwrite, commandOption.outType, commandOption.outPrefix, commandOption.outSuffix);
-			} 
-			else if (commandOption.outLocation == OutLocation.ContentTop) {
-				this.viewManager.insertAtContentTop(resOutput, commandOption.outType, commandOption.outPrefix, commandOption.outSuffix);
+		jsonList.forEach(response => {
+			const jsonRegex = /reliability[\s\S]*?:\s*([\d.]+)[\s\S]*?output[\s\S]*?:\s*"([^"^}]+)/;
+			const match = response.match(jsonRegex);
+			let resOutput;
+			let resReliabity;
+			if (match && match.length > 1) {
+				resOutput = match[2];
+				resReliabity = parseFloat(match[1]);
+			} else {
+				new Notice(`⛔ ${this.manifest.name}: output format error (output: ${responseRaw})`);
+				return;
 			}
-		}
-		// Output Type 3. [Frontmatter Case]
-		else if (commandOption.outType == OutType.FrontMatter) {
-			this.viewManager.insertAtFrontMatter(commandOption.key, resOutput, commandOption.overwrite, commandOption.outPrefix, commandOption.outSuffix);
-		}
-		// Output Type 4. [Title]
-		else if (commandOption.outType == OutType.Title) {
-			this.viewManager.insertAtTitle(resOutput, commandOption.overwrite, commandOption.outPrefix, commandOption.outSuffix);
-		}
-		new Notice(`✅ ${this.manifest.name}: classified to ${resOutput}`);
+
+			// Avoid low reliability
+			if (resReliabity! <= 0.2) {
+				new Notice(`⛔ ${this.manifest.name}: response has low reliability (${resReliabity})`);
+				return;
+			}
+
+			// ------- [Add Tag] -------
+			// Output Type 1. [Tag Case] + Output Type 2. [Wikilink Case]
+			if (commandOption.outType == OutType.Tag || commandOption.outType == OutType.Wikilink) {
+				if (commandOption.outLocation == OutLocation.Cursor) {
+					this.viewManager.insertAtCursor(resOutput!, commandOption.overwrite, commandOption.outType, commandOption.outPrefix, commandOption.outSuffix);
+				} 
+				else if (commandOption.outLocation == OutLocation.ContentTop) {
+					this.viewManager.insertAtContentTop(resOutput!, commandOption.outType, commandOption.outPrefix, commandOption.outSuffix);
+				}
+			}
+			// Output Type 3. [Frontmatter Case]
+			else if (commandOption.outType == OutType.FrontMatter) {
+				this.viewManager.insertAtFrontMatter(commandOption.key, resOutput!, commandOption.overwrite, commandOption.outPrefix, commandOption.outSuffix);
+			}
+			// Output Type 4. [Title]
+			else if (commandOption.outType == OutType.Title) {
+				this.viewManager.insertAtTitle(resOutput!, commandOption.overwrite, commandOption.outPrefix, commandOption.outSuffix);
+			}
+			new Notice(`✅ ${this.manifest.name}: classified to ${resOutput}`);
+		})
 	}
 
 	// create loading spin in the Notice message
