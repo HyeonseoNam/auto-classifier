@@ -55,12 +55,14 @@ export interface CommandOption {
 export class AutoClassifierSettings {
     apiKey: string;
     apiKeyCreatedAt: Date | null;
+    baseURL: string;
     commandOption: CommandOption;
 }
 
 export const DEFAULT_SETTINGS: AutoClassifierSettings = {
     apiKey: '',
     apiKeyCreatedAt: null,
+    baseURL: 'https://api.openai.com/v1',
     commandOption: {
         useRef: true,
         refs: [],
@@ -119,6 +121,19 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
         // ------- [API Setting] -------
         // API Key input
         containerEl.createEl('h1', { text: 'API Setting' });
+        new Setting(containerEl)
+            .setName('API Base URL')
+            .setDesc('Optional: Set a different base URL for API calls (e.g. for proxies)')
+            .addText((text) =>
+                text
+                    .setPlaceholder('https://api.openai.com/v1')
+                    .setValue(this.plugin.settings.baseURL)
+                    .onChange((value) => {
+                        this.plugin.settings.baseURL = value;
+                        this.plugin.saveSettings();
+                    })
+            );
+
         const apiKeySetting = new Setting(containerEl)
             .setName('ChatGPT API Key')
             .setDesc('')

@@ -122,6 +122,11 @@ export default class AutoClassifierPlugin extends Plugin {
 			this.settings.apiKey,
 			this.settings.commandOption.model,
 			this.settings.commandOption.max_tokens,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			this.settings.baseURL,
 		);
 		const jsonRegex = /reliability[\s\S]*?:\s*([\d.]+)[\s\S]*?output[\s\S]*?:\s*"([^"^}]+)/;
 		const match = responseRaw.match(jsonRegex);
