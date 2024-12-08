@@ -180,7 +180,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                     apiTestMessageEl.setText('Testing api call...');
                     apiTestMessageEl.style.color = 'var(--text-normal)';
                     try {
-                        await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey, this.plugin.settings.commandOption.model);
+                        await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey, this.plugin.settings.commandOption.model, undefined, undefined, undefined, undefined, undefined, this.plugin.settings.baseURL);
                         apiTestMessageEl.setText('Success! API working.');
                         apiTestMessageEl.style.color = 'var(--success-color)';
                         this.plugin.settings.apiKeyCreatedAt = new Date();
