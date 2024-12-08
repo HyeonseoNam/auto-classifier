@@ -111,6 +111,7 @@ export default class AutoClassifierPlugin extends Plugin {
 		let user_prompt = this.settings.commandOption.prmpt_template;
 		user_prompt = user_prompt.replace('{{input}}', input);
 		user_prompt = user_prompt.replace('{{reference}}', refs.join(','));
+		user_prompt = user_prompt.replace('{{max_suggestions}}', String(this.settings.commandOption.max_suggestions));
 
 		const system_role = this.settings.commandOption.prmpt_template;
 
@@ -128,26 +129,25 @@ export default class AutoClassifierPlugin extends Plugin {
 			undefined,
 			this.settings.baseURL,
 		);
-		const jsonRegex = /reliability[\s\S]*?:\s*([\d.]+)[\s\S]*?output[\s\S]*?:\s*"([^"^}]+)/;
-		const match = responseRaw.match(jsonRegex);
-		let resOutput;
-		let resReliabity;
-		if (match && match.length > 1) {
-			resOutput = match[2];
-			resReliabity = parseFloat(match[1]);
-		} else {
-			new Notice(`⛔ ${this.manifest.name}: output format error (output: ${responseRaw})`);
-			return null;
-		}
-		
+		try {
+			const response = JSON.parse(responseRaw);
+			const resReliability = response.reliability;
+			const resOutputs = response.outputs;
 
-		// Avoid row reliability
-		if (resReliabity <= 0.2) {
-			new Notice(`⛔ ${this.manifest.name}: response has row reliability (${resReliabity})`);
-			return null;
-		}
+			// Validate response format
+			if (!Array.isArray(resOutputs)) {
+				new Notice(`⛔ ${this.manifest.name}: output format error (expected array)`);
+				return null;
+			}
 
-		// ------- [Add Tag] -------
+			// Avoid low reliability
+			if (resReliability <= 0.2) {
+				new Notice(`⛔ ${this.manifest.name}: response has low reliability (${resReliability})`);
+				return null;
+			}
+
+			// ------- [Add Tags] -------
+			for (const resOutput of resOutputs) {
 		// Output Type 1. [Tag Case] + Output Type 2. [Wikilink Case]
 		if (commandOption.outType == OutType.Tag || commandOption.outType == OutType.Wikilink) {
 			if (commandOption.outLocation == OutLocation.Cursor) {
@@ -165,7 +165,8 @@ export default class AutoClassifierPlugin extends Plugin {
 		else if (commandOption.outType == OutType.Title) {
 			this.viewManager.insertAtTitle(resOutput, commandOption.overwrite, commandOption.outPrefix, commandOption.outSuffix);
 		}
-		new Notice(`✅ ${this.manifest.name}: classified to ${resOutput}`);
+			}
+			new Notice(`✅ ${this.manifest.name}: classified with ${resOutputs.length} tags`);
 	}
 
 	// create loading spin in the Notice message
