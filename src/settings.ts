@@ -134,6 +134,19 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                     })
             );
 
+        new Setting(containerEl)
+            .setName('Custom Model')
+            .setDesc("ID of the model to use. See https://platform.openai.com/docs/models")
+            .addText((text) =>
+                text
+                    .setPlaceholder('gpt-3.5-turbo')
+                    .setValue(commandOption.model)
+                    .onChange(async (value) => {
+                        commandOption.model = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
         const apiKeySetting = new Setting(containerEl)
             .setName('ChatGPT API Key')
             .setDesc('')
@@ -167,7 +180,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                     apiTestMessageEl.setText('Testing api call...');
                     apiTestMessageEl.style.color = 'var(--text-normal)';
                     try {
-                        await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey);
+                        await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey, this.plugin.settings.commandOption.model);
                         apiTestMessageEl.setText('Success! API working.');
                         apiTestMessageEl.style.color = 'var(--success-color)';
                         this.plugin.settings.apiKeyCreatedAt = new Date();
@@ -500,19 +513,6 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                 });
                 customChatRoleEl.descEl.createSpan({text: 'Define custom role to ChatGPT system.'});
 
-            new Setting(containerEl)
-                .setName('Custom Model')
-                .setDesc("ID of the model to use. See https://platform.openai.com/docs/models")
-                .setClass('setting-item-child')
-                .addText((text) =>
-                    text
-                        .setPlaceholder('gpt-3.5-turbo')
-                        .setValue(commandOption.model)
-                        .onChange(async (value) => {
-                            commandOption.model = value;
-                            await this.plugin.saveSettings();
-                        })
-                );
 
             new Setting(containerEl)
                 .setName('Custom Max Tokens')
