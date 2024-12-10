@@ -55,12 +55,14 @@ export interface CommandOption {
 export class AutoClassifierSettings {
     apiKey: string;
     apiKeyCreatedAt: Date | null;
+    baseURL: string;
     commandOption: CommandOption;
 }
 
 export const DEFAULT_SETTINGS: AutoClassifierSettings = {
     apiKey: '',
     apiKeyCreatedAt: null,
+    baseURL: 'https://api.openai.com/v1',
     commandOption: {
         useRef: true,
         refs: [],
@@ -119,6 +121,32 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
         // ------- [API Setting] -------
         // API Key input
         containerEl.createEl('h1', { text: 'API Setting' });
+        new Setting(containerEl)
+            .setName('API Base URL')
+            .setDesc('Optional: Set a different base URL for API calls (e.g. for proxies)')
+            .addText((text) =>
+                text
+                    .setPlaceholder('https://api.openai.com/v1')
+                    .setValue(this.plugin.settings.baseURL)
+                    .onChange((value) => {
+                        this.plugin.settings.baseURL = value;
+                        this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName('Custom Model')
+            .setDesc("ID of the model to use. See https://platform.openai.com/docs/models")
+            .addText((text) =>
+                text
+                    .setPlaceholder('gpt-3.5-turbo')
+                    .setValue(commandOption.model)
+                    .onChange(async (value) => {
+                        commandOption.model = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
         const apiKeySetting = new Setting(containerEl)
             .setName('ChatGPT API Key')
             .setDesc('')
@@ -152,7 +180,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                     apiTestMessageEl.setText('Testing api call...');
                     apiTestMessageEl.style.color = 'var(--text-normal)';
                     try {
-                        await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey);
+                        await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey, this.plugin.settings.commandOption.model, undefined, undefined, undefined, undefined, undefined, this.plugin.settings.baseURL);
                         apiTestMessageEl.setText('Success! API working.');
                         apiTestMessageEl.style.color = 'var(--success-color)';
                         this.plugin.settings.apiKeyCreatedAt = new Date();
@@ -485,19 +513,6 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                 });
                 customChatRoleEl.descEl.createSpan({text: 'Define custom role to ChatGPT system.'});
 
-            new Setting(containerEl)
-                .setName('Custom Model')
-                .setDesc("ID of the model to use. See https://platform.openai.com/docs/models")
-                .setClass('setting-item-child')
-                .addText((text) =>
-                    text
-                        .setPlaceholder('gpt-3.5-turbo')
-                        .setValue(commandOption.model)
-                        .onChange(async (value) => {
-                            commandOption.model = value;
-                            await this.plugin.saveSettings();
-                        })
-                );
 
             new Setting(containerEl)
                 .setName('Custom Max Tokens')
