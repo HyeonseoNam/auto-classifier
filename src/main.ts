@@ -133,10 +133,6 @@ export default class AutoClassifierPlugin extends Plugin {
 		let user_prompt = this.settings.commandOption.prmpt_template;
 		user_prompt = user_prompt.replace("{{input}}", input);
 		user_prompt = user_prompt.replace("{{reference}}", refs.join(","));
-		user_prompt = user_prompt.replace(
-			"{{max_suggestions}}",
-			String(this.settings.commandOption.max_suggestions),
-		);
 
 		const system_role = this.settings.commandOption.prmpt_template;
 
@@ -166,6 +162,15 @@ export default class AutoClassifierPlugin extends Plugin {
 					return null;
 				}
 
+				// Limit number of suggestions
+				const limitedOutputs = resOutputs.slice(0, this.settings.commandOption.max_suggestions);
+
+				// Validate output format
+				if (!Array.isArray(limitedOutputs)) {
+					new Notice(`⛔ ${this.manifest.name}: output format error (expected array)`);
+					return null;
+				}
+
 				// Avoid low reliability
 				if (resReliability <= 0.2) {
 					new Notice(
@@ -175,7 +180,7 @@ export default class AutoClassifierPlugin extends Plugin {
 				}
 
 				// ------- [Add Tags] -------
-				for (const resOutput of resOutputs) {
+				for (const resOutput of limitedOutputs) {
 					// Output Type 1. [Tag Case] + Output Type 2. [Wikilink Case]
 					if (
 						commandOption.outType == OutType.Tag ||
@@ -218,7 +223,7 @@ export default class AutoClassifierPlugin extends Plugin {
 						);
 					}
 				}
-				new Notice(`✅ ${this.manifest.name}: classified with ${resOutputs.length} tags`);
+				new Notice(`✅ ${this.manifest.name}: classified with ${limitedOutputs.length} tags`);
 			} catch (error) {
 				new Notice(`⛔ ${this.manifest.name}: JSON parsing error - ${error}`);
 				return null;
