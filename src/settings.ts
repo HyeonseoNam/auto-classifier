@@ -424,8 +424,25 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
 
 
         // ------- [Advanced Setting] -------
-        // Toggle custom rule
         containerEl.createEl('h1', { text: 'Advanced Setting' });
+
+        new Setting(containerEl)
+            .setName('Maximum Tag Suggestions')
+            .setDesc("Maximum number of tags to suggest (1-10)")
+            .addText((text) =>
+                text
+                    .setPlaceholder('3')
+                    .setValue(String(commandOption.max_suggestions))
+                    .onChange(async (value) => {
+                        const num = parseInt(value);
+                        if (num >= 1 && num <= 10) {
+                            commandOption.max_suggestions = num;
+                            await this.plugin.saveSettings();
+                        }
+                    })
+            );
+
+        // Toggle custom rule
         new Setting(containerEl)
             .setName('Use Custom Request Template')
             .addToggle((toggle) =>
@@ -530,22 +547,6 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                         })
                 );
 
-            new Setting(containerEl)
-                .setName('Maximum Tag Suggestions')
-                .setDesc("Maximum number of tags to suggest (1-10)")
-                .setClass('setting-item-child')
-                .addText((text) =>
-                    text
-                        .setPlaceholder('3')
-                        .setValue(String(commandOption.max_suggestions))
-                        .onChange(async (value) => {
-                            const num = parseInt(value);
-                            if (num >= 1 && num <= 10) {
-                                commandOption.max_suggestions = num;
-                                await this.plugin.saveSettings();
-                            }
-                        })
-                );
         }
     }
 
