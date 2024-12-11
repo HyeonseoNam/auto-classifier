@@ -60,6 +60,26 @@ export default class AutoClassifierPlugin extends Plugin {
 	async onunload() {
 	}
 
+	// create loading spin in the Notice message
+	createLoadingNotice(text: string, number = 10000): Notice {
+		const notice = new Notice('', number);
+		const loadingContainer = document.createElement('div');
+		loadingContainer.addClass('loading-container');
+
+		const loadingIcon = document.createElement('div');
+		loadingIcon.addClass('loading-icon');
+		const loadingText = document.createElement('span');
+		loadingText.textContent = text;
+		//@ts-ignore
+		notice.noticeEl.empty();
+		loadingContainer.appendChild(loadingIcon);
+		loadingContainer.appendChild(loadingText);
+		//@ts-ignore
+		notice.noticeEl.appendChild(loadingContainer);
+
+		return notice;
+	}
+
 	async runClassifyTag(inputType: InputType) {
 		const loadingNotice = this.createLoadingNotice(`${this.manifest.name}: Processing..`);
 		try {
@@ -169,25 +189,6 @@ export default class AutoClassifierPlugin extends Plugin {
 			new Notice(`✅ ${this.manifest.name}: classified with ${resOutputs.length} tags`);
 	}
 
-	// create loading spin in the Notice message
-	createLoadingNotice(text: string, number = 10000): Notice {
-		const notice = new Notice('', number);
-		const loadingContainer = document.createElement('div');
-		loadingContainer.addClass('loading-container');
-
-		const loadingIcon = document.createElement('div');
-		loadingIcon.addClass('loading-icon');
-		const loadingText = document.createElement('span');
-		loadingText.textContent = text;
-		//@ts-ignore
-		notice.noticeEl.empty();
-		loadingContainer.appendChild(loadingIcon);
-		loadingContainer.appendChild(loadingText);
-		//@ts-ignore
-		notice.noticeEl.appendChild(loadingContainer);
-
-		return notice;
-	}
 }
 
 
