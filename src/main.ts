@@ -187,8 +187,11 @@ export default class AutoClassifierPlugin extends Plugin {
 		}
 			}
 			new Notice(`✅ ${this.manifest.name}: classified with ${resOutputs.length} tags`);
+		} catch (error) {
+			new Notice(`⛔ ${this.manifest.name}: ${error}`);
+			return null;
+		}
 	}
-
 }
 
 
