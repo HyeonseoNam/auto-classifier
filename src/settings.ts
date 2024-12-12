@@ -49,6 +49,7 @@ export interface CommandOption {
     prmpt_template: string;
     model: string;
     max_tokens: number;
+    max_suggestions: number;
 }
 
 
@@ -82,6 +83,7 @@ export const DEFAULT_SETTINGS: AutoClassifierSettings = {
         prmpt_template: DEFAULT_PROMPT_TEMPLATE,
         model: "gpt-3.5-turbo",
         max_tokens: 150,
+        max_suggestions: 3,
     },
 };
 
@@ -422,8 +424,25 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
 
 
         // ------- [Advanced Setting] -------
-        // Toggle custom rule
         containerEl.createEl('h1', { text: 'Advanced Setting' });
+
+        new Setting(containerEl)
+            .setName('Maximum Tag Suggestions')
+            .setDesc("Maximum number of tags to suggest (1-10)")
+            .addText((text) =>
+                text
+                    .setPlaceholder('3')
+                    .setValue(String(commandOption.max_suggestions))
+                    .onChange(async (value) => {
+                        const num = parseInt(value);
+                        if (num >= 1 && num <= 10) {
+                            commandOption.max_suggestions = num;
+                            await this.plugin.saveSettings();
+                        }
+                    })
+            );
+
+        // Toggle custom rule
         new Setting(containerEl)
             .setName('Use Custom Request Template')
             .addToggle((toggle) =>
@@ -527,6 +546,7 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                             await this.plugin.saveSettings();
                         })
                 );
+
         }
     }
 
