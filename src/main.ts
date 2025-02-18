@@ -152,7 +152,7 @@ export default class AutoClassifierPlugin extends Plugin {
 		);
 		try {
 			try {
-				const response = JSON.parse(responseRaw);
+				const response = JSON.parse(responseRaw.replace(/^```json\n/, "").replace(/\n```$/, ""));
 				const resReliability = response.reliability;
 				const resOutputs = response.outputs;
 
