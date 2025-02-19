@@ -1,7 +1,7 @@
 {
 	"id": "auto-classifier",
 	"name": "Auto Classifier",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"minAppVersion": "1.1.1",
 	"description": "This plugin automatically classify tag from your notes using ChatGPT API. It analyze your note (It can be title, frontmatter, content or selected area) and automatically insert tag where you set.",
 	"author": "Hyeonseo Nam",
