@@ -1,7 +1,13 @@
 import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import { ChatGPT } from 'src/api';
+import { JinaAI } from 'src/jina-api'; // Added JinaAI import
 import type AutoClassifierPlugin from "src/main";
 import { DEFAULT_CHAT_ROLE, DEFAULT_PROMPT_TEMPLATE, DEFAULT_PROMPT_TEMPLATE_WO_REF } from 'src/template'
+
+export enum ClassifierEngine { // Added ClassifierEngine enum
+    ChatGPT,
+    JinaAI,
+}
 
 export enum ReferenceType {
     All,
@@ -57,6 +63,9 @@ export class AutoClassifierSettings {
     apiKey: string;
     apiKeyCreatedAt: Date | null;
     baseURL: string;
+    classifierEngine: ClassifierEngine; // Added classifierEngine
+    jinaApiKey: string; // Added jinaApiKey
+    jinaBaseURL: string; // Added jinaBaseURL
     commandOption: CommandOption;
 }
 
@@ -64,6 +73,9 @@ export const DEFAULT_SETTINGS: AutoClassifierSettings = {
     apiKey: '',
     apiKeyCreatedAt: null,
     baseURL: 'https://api.openai.com/v1',
+    classifierEngine: ClassifierEngine.ChatGPT, // Default to ChatGPT
+    jinaApiKey: 'jina_e24cf807496a48d9be7ea660bd652a37x2ZJYPjVDlgMU69KQvKSepRDbTgM', // Default Jina API Key
+    jinaBaseURL: 'https://api.jina.ai/v1', // Default Jina Base URL
     commandOption: {
         useRef: true,
         refs: [],
@@ -121,78 +133,165 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
 
 
         // ------- [API Setting] -------
-        // API Key input
         containerEl.createEl('h1', { text: 'API Setting' });
-        new Setting(containerEl)
-            .setName('API Base URL')
-            .setDesc('Optional: Set a different base URL for API calls (e.g. for proxies)')
-            .addText((text) =>
-                text
-                    .setPlaceholder('https://api.openai.com/v1')
-                    .setValue(this.plugin.settings.baseURL)
-                    .onChange((value) => {
-                        this.plugin.settings.baseURL = value;
-                        this.plugin.saveSettings();
-                    })
-            );
 
+        // Classifier Engine Dropdown
         new Setting(containerEl)
-            .setName('Custom Model')
-            .setDesc("ID of the model to use. See https://platform.openai.com/docs/models")
-            .addText((text) =>
-                text
-                    .setPlaceholder('gpt-3.5-turbo')
-                    .setValue(commandOption.model)
+            .setName('Classifier Engine')
+            .setDesc('Select the classification engine to use.')
+            .addDropdown((dropdown) => {
+                dropdown
+                    .addOption(String(ClassifierEngine.ChatGPT), "ChatGPT")
+                    .addOption(String(ClassifierEngine.JinaAI), "JinaAI")
+                    .setValue(String(this.plugin.settings.classifierEngine))
                     .onChange(async (value) => {
-                        commandOption.model = value;
+                        this.plugin.settings.classifierEngine = parseInt(value) as ClassifierEngine;
                         await this.plugin.saveSettings();
-                    })
-            );
+                        this.display(); // Re-render settings to show/hide relevant fields
+                    });
+            });
 
-        const apiKeySetting = new Setting(containerEl)
-            .setName('ChatGPT API Key')
-            .setDesc('')
-            .addText((text) =>
-                text
-                    .setPlaceholder('API key')
-                    .setValue(this.plugin.settings.apiKey)
-                    .onChange((value) => {
-                        this.plugin.settings.apiKey = value;
-                        this.plugin.saveSettings();
-                    })
-            )
-        // API Key Description & Message
-        apiKeySetting.descEl.createSpan({text: 'Enter your ChatGPT API key. If you don\'t have one yet, you can create it at '});
-        apiKeySetting.descEl.createEl('a', {href: 'https://platform.openai.com/account/api-keys', text: 'here'})
-        const apiTestMessageEl = document.createElement('div');
-        apiKeySetting.descEl.appendChild(apiTestMessageEl);
+        // Conditional API Settings
+        if (this.plugin.settings.classifierEngine === ClassifierEngine.ChatGPT) {
+            new Setting(containerEl)
+                .setName('ChatGPT API Base URL')
+                .setDesc('Optional: Set a different base URL for ChatGPT API calls (e.g. for proxies)')
+                .addText((text) =>
+                    text
+                        .setPlaceholder('https://api.openai.com/v1')
+                        .setValue(this.plugin.settings.baseURL)
+                        .onChange((value) => {
+                            this.plugin.settings.baseURL = value;
+                            this.plugin.saveSettings();
+                        })
+                );
 
-        //API Key default message
-        if (this.plugin.settings.apiKey && this.plugin.settings.apiKeyCreatedAt) {
-            apiTestMessageEl.setText(`This key was tested at ${this.plugin.settings.apiKeyCreatedAt.toString()}`);
-            apiTestMessageEl.style.color = 'var(--success-color)';
+            new Setting(containerEl)
+                .setName('ChatGPT Model')
+                .setDesc("ID of the ChatGPT model to use. See https://platform.openai.com/docs/models")
+                .addText((text) =>
+                    text
+                        .setPlaceholder('gpt-3.5-turbo')
+                        .setValue(commandOption.model) // Assuming commandOption.model is for ChatGPT
+                        .onChange(async (value) => {
+                            commandOption.model = value;
+                            await this.plugin.saveSettings();
+                        })
+                );
+
+            const apiKeySetting = new Setting(containerEl)
+                .setName('ChatGPT API Key')
+                .setDesc('')
+                .addText((text) =>
+                    text
+                        .setPlaceholder('API key')
+                        .setValue(this.plugin.settings.apiKey)
+                        .onChange((value) => {
+                            this.plugin.settings.apiKey = value;
+                            this.plugin.saveSettings();
+                        })
+                )
+            apiKeySetting.descEl.createSpan({ text: 'Enter your ChatGPT API key. If you don\'t have one yet, you can create it at ' });
+            apiKeySetting.descEl.createEl('a', { href: 'https://platform.openai.com/account/api-keys', text: 'here' })
+            const apiTestMessageEl = document.createElement('div');
+            apiKeySetting.descEl.appendChild(apiTestMessageEl);
+
+            if (this.plugin.settings.apiKey && this.plugin.settings.apiKeyCreatedAt) {
+                apiTestMessageEl.setText(`This key was tested at ${this.plugin.settings.apiKeyCreatedAt.toString()}`);
+                apiTestMessageEl.style.color = 'var(--success-color)';
+            }
+
+            apiKeySetting.addButton((cb) => {
+                cb.setButtonText('Test API call')
+                    .setCta()
+                    .onClick(async () => {
+                        apiTestMessageEl.setText('Testing API call...');
+                        apiTestMessageEl.style.color = 'var(--text-normal)';
+                        try {
+                            await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey, commandOption.model, undefined, undefined, undefined, undefined, undefined, this.plugin.settings.baseURL);
+                            apiTestMessageEl.setText('Success! API working.');
+                            apiTestMessageEl.style.color = 'var(--success-color)';
+                            this.plugin.settings.apiKeyCreatedAt = new Date();
+                        } catch (error) {
+                            apiTestMessageEl.setText('Error: API is not working. Check console for details.');
+                            apiTestMessageEl.style.color = 'var(--warning-color)';
+                            this.plugin.settings.apiKeyCreatedAt = null;
+                            console.error("ChatGPT API Test Error:", error);
+                        }
+                    });
+            });
+        } else if (this.plugin.settings.classifierEngine === ClassifierEngine.JinaAI) {
+            new Setting(containerEl)
+                .setName('Jina AI API Base URL')
+                .setDesc('Optional: Set a different base URL for Jina AI API calls.')
+                .addText((text) =>
+                    text
+                        .setPlaceholder('https://api.jina.ai/v1')
+                        .setValue(this.plugin.settings.jinaBaseURL)
+                        .onChange((value) => {
+                            this.plugin.settings.jinaBaseURL = value;
+                            this.plugin.saveSettings();
+                        })
+                );
+
+            // Note: commandOption.model is currently shared. If Jina needs a separate model field,
+            // it should be added to AutoClassifierSettings and handled here.
+            // For now, we'll reuse commandOption.model but default it appropriately.
+            new Setting(containerEl)
+                .setName('Jina AI Model')
+                .setDesc("ID of the Jina AI model to use (e.g., jina-embeddings-v3).")
+                .addText((text) =>
+                    text
+                        .setPlaceholder('jina-embeddings-v3')
+                        .setValue(commandOption.model) // Reuse existing model field, ensure it's set to a Jina default if empty or on switch
+                        .onChange(async (value) => {
+                            commandOption.model = value;
+                            await this.plugin.saveSettings();
+                        })
+                );
+
+            const jinaApiKeySetting = new Setting(containerEl)
+                .setName('Jina AI API Key')
+                .setDesc('')
+                .addText((text) =>
+                    text
+                        .setPlaceholder('Jina API key')
+                        .setValue(this.plugin.settings.jinaApiKey)
+                        .onChange((value) => {
+                            this.plugin.settings.jinaApiKey = value;
+                            this.plugin.saveSettings();
+                        })
+                );
+            jinaApiKeySetting.descEl.createSpan({ text: 'Enter your Jina AI API key.' });
+            const jinaApiTestMessageEl = document.createElement('div');
+            jinaApiKeySetting.descEl.appendChild(jinaApiTestMessageEl);
+
+            // Jina API Key test button
+            jinaApiKeySetting.addButton((cb) => {
+                cb.setButtonText('Test Jina API')
+                    .setCta()
+                    .onClick(async () => {
+                        jinaApiTestMessageEl.setText('Testing Jina API call...');
+                        jinaApiTestMessageEl.style.color = 'var(--text-normal)';
+                        try {
+                            // Use a simple test case
+                            await JinaAI.callAPI(
+                                this.plugin.settings.jinaApiKey,
+                                this.plugin.settings.jinaBaseURL,
+                                commandOption.model || 'jina-embeddings-v3', // Fallback to default if model is not set
+                                ['This is a test sentence.'],
+                                ['positive', 'negative', 'neutral']
+                            );
+                            jinaApiTestMessageEl.setText('Success! Jina AI API working.');
+                            jinaApiTestMessageEl.style.color = 'var(--success-color)';
+                        } catch (error: any) {
+                            jinaApiTestMessageEl.setText(`Error: Jina AI API is not working. ${error.message}`);
+                            jinaApiTestMessageEl.style.color = 'var(--warning-color)';
+                            console.error("Jina AI API Test Error:", error);
+                        }
+                    });
+            });
         }
-
-        // API Key test button
-        apiKeySetting.addButton((cb) => {
-            cb.setButtonText('Test API call')
-                .setCta()
-                .onClick(async () => {
-                    this.plugin.settings.apiKeyCreatedAt
-                    apiTestMessageEl.setText('Testing api call...');
-                    apiTestMessageEl.style.color = 'var(--text-normal)';
-                    try {
-                        await ChatGPT.callAPI('', 'test', this.plugin.settings.apiKey, this.plugin.settings.commandOption.model, undefined, undefined, undefined, undefined, undefined, this.plugin.settings.baseURL);
-                        apiTestMessageEl.setText('Success! API working.');
-                        apiTestMessageEl.style.color = 'var(--success-color)';
-                        this.plugin.settings.apiKeyCreatedAt = new Date();
-                    } catch (error) {
-                        apiTestMessageEl.setText('Error: API is not working.');
-                        apiTestMessageEl.style.color = 'var(--warning-color)';
-                        this.plugin.settings.apiKeyCreatedAt = null;
-                    }
-                });
-        });
 
         // ------- [Tag Reference Setting] -------
         containerEl.createEl('h1', { text: 'Tag Reference Setting' });
@@ -442,112 +541,115 @@ export class AutoClassifierSettingTab extends PluginSettingTab {
                     })
             );
 
-        // Toggle custom rule
-        new Setting(containerEl)
-            .setName('Use Custom Request Template')
-            .addToggle((toggle) =>
-                toggle
-                    .setValue(commandOption.useCustomCommand)
-                    .onChange(async (value) => {
-                        commandOption.useCustomCommand = value;
-                        await this.plugin.saveSettings();
-                        this.display();
-                    }),
-            );
-
-        // Custom template textarea
-        if (commandOption.useCustomCommand) {
-            
-            // Different default template depanding on useRef
-            if (commandOption.useRef) {
-                if(commandOption.prmpt_template == DEFAULT_PROMPT_TEMPLATE_WO_REF) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
-            } else {
-                if(commandOption.prmpt_template == DEFAULT_PROMPT_TEMPLATE) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE_WO_REF;
-            }
-
-            const customPromptTemplateEl = new Setting(containerEl)
-                .setName('Custom Prompt Template')
-                .setDesc('')
-                .setClass('setting-item-child')
-                .setClass('block-control-item')
-                .setClass('height20-text-area')
-                .addTextArea((text) =>
-                    text
-                        .setPlaceholder('Write custom prompt template.')
-                        .setValue(commandOption.prmpt_template)
-                        .onChange(async (value) => {
-                            commandOption.prmpt_template = value;
-                            await this.plugin.saveSettings();
-                        })
-                )
-                .addExtraButton(cb => {
-                    cb
-                        .setIcon('reset')
-                        .setTooltip('Restore to default')
-                        .onClick(async () => {
-                            // Different default template depanding on useRef
-                            if (commandOption.useRef) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
-                            else commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE_WO_REF;
-
-                            await this.plugin.saveSettings();
-                            this.display();
-                        })
-                });
-            customPromptTemplateEl.descEl.createSpan({text: 'This plugin is based on the ChatGPT answer.'});
-            customPromptTemplateEl.descEl.createEl('br');
-            customPromptTemplateEl.descEl.createSpan({text: 'You can use your own template when making a request to ChatGPT.'});
-            customPromptTemplateEl.descEl.createEl('br');
-            customPromptTemplateEl.descEl.createEl('br');
-            customPromptTemplateEl.descEl.createSpan({text: 'Variables:'});
-            customPromptTemplateEl.descEl.createEl('br');
-            customPromptTemplateEl.descEl.createSpan({text: '- {{input}}: The text to classify will be inserted here.'});
-            customPromptTemplateEl.descEl.createEl('br');
-            customPromptTemplateEl.descEl.createSpan({text: '- {{reference}}: The reference tags will be inserted here.'});
-            customPromptTemplateEl.descEl.createEl('br');
-
-            const customChatRoleEl = new Setting(containerEl)
-                .setName('Custom Chat Role')
-                .setDesc('')
-                .setClass('setting-item-child')
-                .setClass('block-control-item')
-                .setClass('height10-text-area')
-                .addTextArea((text) =>
-                    text
-                        .setPlaceholder('Write custom chat role for gpt system.')
-                        .setValue(commandOption.chat_role)
-                        .onChange(async (value) => {
-                            commandOption.chat_role = value;
-                            await this.plugin.saveSettings();
-                        })
-                )
-                .addExtraButton(cb => {
-                    cb
-                        .setIcon('reset')
-                        .setTooltip('Restore to default')
-                        .onClick(async () => {
-                            commandOption.chat_role = DEFAULT_CHAT_ROLE;
-                            await this.plugin.saveSettings();
-                            this.display();
-                        })
-                });
-                customChatRoleEl.descEl.createSpan({text: 'Define custom role to ChatGPT system.'});
-
-
+        // Conditional Advanced Settings for ChatGPT
+        if (this.plugin.settings.classifierEngine === ClassifierEngine.ChatGPT) {
+            // Toggle custom rule
             new Setting(containerEl)
-                .setName('Custom Max Tokens')
-                .setDesc("The maximum number of tokens that can be generated in the completion.")
-                .setClass('setting-item-child')
-                .addText((text) =>
-                    text
-                        .setPlaceholder('150')
-                        .setValue(String(commandOption.max_tokens))
+                .setName('Use Custom Request Template (ChatGPT)')
+                .addToggle((toggle) =>
+                    toggle
+                        .setValue(commandOption.useCustomCommand)
                         .onChange(async (value) => {
-                            commandOption.max_tokens = parseInt(value);
+                            commandOption.useCustomCommand = value;
                             await this.plugin.saveSettings();
-                        })
+                            this.display();
+                        }),
                 );
 
+            // Custom template textarea
+            if (commandOption.useCustomCommand) {
+
+                // Different default template depanding on useRef
+                if (commandOption.useRef) {
+                    if(commandOption.prmpt_template == DEFAULT_PROMPT_TEMPLATE_WO_REF) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
+                } else {
+                    if(commandOption.prmpt_template == DEFAULT_PROMPT_TEMPLATE) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE_WO_REF;
+                }
+
+                const customPromptTemplateEl = new Setting(containerEl)
+                    .setName('Custom Prompt Template (ChatGPT)')
+                    .setDesc('')
+                    .setClass('setting-item-child')
+                    .setClass('block-control-item')
+                    .setClass('height20-text-area')
+                    .addTextArea((text) =>
+                        text
+                            .setPlaceholder('Write custom prompt template.')
+                            .setValue(commandOption.prmpt_template)
+                            .onChange(async (value) => {
+                                commandOption.prmpt_template = value;
+                                await this.plugin.saveSettings();
+                            })
+                    )
+                    .addExtraButton(cb => {
+                        cb
+                            .setIcon('reset')
+                            .setTooltip('Restore to default')
+                            .onClick(async () => {
+                                // Different default template depanding on useRef
+                                if (commandOption.useRef) commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE;
+                                else commandOption.prmpt_template = DEFAULT_PROMPT_TEMPLATE_WO_REF;
+
+                                await this.plugin.saveSettings();
+                                this.display();
+                            })
+                    });
+                customPromptTemplateEl.descEl.createSpan({text: 'This plugin is based on the ChatGPT answer.'});
+                customPromptTemplateEl.descEl.createEl('br');
+                customPromptTemplateEl.descEl.createSpan({text: 'You can use your own template when making a request to ChatGPT.'});
+                customPromptTemplateEl.descEl.createEl('br');
+                customPromptTemplateEl.descEl.createEl('br');
+                customPromptTemplateEl.descEl.createSpan({text: 'Variables:'});
+                customPromptTemplateEl.descEl.createEl('br');
+                customPromptTemplateEl.descEl.createSpan({text: '- {{input}}: The text to classify will be inserted here.'});
+                customPromptTemplateEl.descEl.createEl('br');
+                customPromptTemplateEl.descEl.createSpan({text: '- {{reference}}: The reference tags will be inserted here.'});
+                customPromptTemplateEl.descEl.createEl('br');
+
+                const customChatRoleEl = new Setting(containerEl)
+                    .setName('Custom Chat Role (ChatGPT)')
+                    .setDesc('')
+                    .setClass('setting-item-child')
+                    .setClass('block-control-item')
+                    .setClass('height10-text-area')
+                    .addTextArea((text) =>
+                        text
+                            .setPlaceholder('Write custom chat role for gpt system.')
+                            .setValue(commandOption.chat_role)
+                            .onChange(async (value) => {
+                                commandOption.chat_role = value;
+                                await this.plugin.saveSettings();
+                            })
+                    )
+                    .addExtraButton(cb => {
+                        cb
+                            .setIcon('reset')
+                            .setTooltip('Restore to default')
+                            .onClick(async () => {
+                                commandOption.chat_role = DEFAULT_CHAT_ROLE;
+                                await this.plugin.saveSettings();
+                                this.display();
+                            })
+                    });
+                    customChatRoleEl.descEl.createSpan({text: 'Define custom role to ChatGPT system.'});
+
+
+                new Setting(containerEl)
+                    .setName('Custom Max Tokens (ChatGPT)')
+                    .setDesc("The maximum number of tokens that can be generated in the completion.")
+                    .setClass('setting-item-child')
+                    .addText((text) =>
+                        text
+                            .setPlaceholder('150')
+                            .setValue(String(commandOption.max_tokens))
+                            .onChange(async (value) => {
+                                commandOption.max_tokens = parseInt(value);
+                                await this.plugin.saveSettings();
+                            })
+                    );
+            }
         }
+        // For JinaAI, these custom prompt/role/token settings are hidden as they are not applicable.
     }
 
 
