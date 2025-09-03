@@ -15,7 +15,7 @@ export const DEFAULT_PROMPT_TEMPLATE_WO_REF = `Classify this content:
 """
 {{input}}
 """
-Answer format is JSON {reliability:0~1, output:selected_category}. 
+Answer format is JSON {reliability:0~1, outputs:array_of_selected_category}. 
 Even if you are not sure, qualify the reliability and recommend a proper category.
 Respond only with valid JSON. Do not write an introduction or summary.
 `;
