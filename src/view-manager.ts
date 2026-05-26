@@ -69,8 +69,8 @@ export class ViewManager {
         return tags;
     }
 
-    async insertAtFrontMatter(key: string, value: string, overwrite = false, prefix = '', suffix = ''): Promise<void> {
-        value = `${prefix}${value}${suffix}`;
+    async insertAtFrontMatter(key: string, values: string[], overwrite = false, prefix = '', suffix = ''): Promise<void> {
+        values = values.map((value) => `${prefix}${value}${suffix}`);
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         
         if (activeView) {
@@ -81,27 +81,28 @@ export class ViewManager {
                 if (frontmatter[key] && !overwrite) {
                     // add value as list element if exist
                     if (Array.isArray(frontmatter[key])) {
-                        frontmatter[key].push(value);
+                        for (const value of values) 
+                            frontmatter[key].push(value);
                     } else {
-                        frontmatter[key] = [frontmatter[key], value];
+                        frontmatter[key] = [frontmatter[key], ...values];
                     }
                 } else {
                     // overwrite
-                    frontmatter[key] = value;
+                    frontmatter[key] = values;
                 }
             });
         }
     }
 
-    async insertAtTitle(value: string, overwrite = false, prefix = '', suffix = ''): Promise<void> {
-        value = `${prefix}${value}${suffix}`;
+    async insertAtTitle(values: string[], overwrite = false, prefix = '', suffix = ''): Promise<void> {
+        values = values.map((value) => `${prefix}${value}${suffix}`);
         const file = this.app.workspace.getActiveFile();
         if (!file) return; 
         let newName = file.basename;
         if (overwrite) {
-            newName = `${value}`;
+            newName = `${values.join(' ')}`;
         } else {
-            newName = `${newName} ${value}`;
+            newName = `${newName} ${values.join(' ')}`;
         }
         newName = newName.replace(/[\"\/<>:\|?\"]/g, ''); // for window file name
         // @ts-ignore
