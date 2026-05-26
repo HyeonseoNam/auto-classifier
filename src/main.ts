@@ -230,12 +230,12 @@ export default class AutoClassifierPlugin extends Plugin {
 			}
 
 			// ------- [Add Tags] -------
-			for (const resOutput of limitedOutputs) {
-				// Output Type 1. [Tag Case] + Output Type 2. [Wikilink Case]
-				if (
-					commandOption.outType == OutType.Tag ||
-					commandOption.outType == OutType.Wikilink
-				) {
+			// Output Type 1. [Tag Case] + Output Type 2. [Wikilink Case]
+			if (
+				commandOption.outType == OutType.Tag ||
+				commandOption.outType == OutType.Wikilink
+			) {
+				for (const resOutput of limitedOutputs) {
 					if (commandOption.outLocation == OutLocation.Cursor) {
 						this.viewManager.insertAtCursor(
 							resOutput,
@@ -244,7 +244,9 @@ export default class AutoClassifierPlugin extends Plugin {
 							commandOption.outPrefix,
 							commandOption.outSuffix,
 						);
-					} else if (commandOption.outLocation == OutLocation.ContentTop) {
+					} else if (
+						commandOption.outLocation == OutLocation.ContentTop
+					) {
 						this.viewManager.insertAtContentTop(
 							resOutput,
 							commandOption.outType,
@@ -253,25 +255,25 @@ export default class AutoClassifierPlugin extends Plugin {
 						);
 					}
 				}
-				// Output Type 3. [Frontmatter Case]
-				else if (commandOption.outType == OutType.FrontMatter) {
-					this.viewManager.insertAtFrontMatter(
-						commandOption.key,
-						resOutput,
-						commandOption.overwrite,
-						commandOption.outPrefix,
-						commandOption.outSuffix,
-					);
-				}
-				// Output Type 4. [Title]
-				else if (commandOption.outType == OutType.Title) {
-					this.viewManager.insertAtTitle(
-						resOutput,
-						commandOption.overwrite,
-						commandOption.outPrefix,
-						commandOption.outSuffix,
-					);
-				}
+			}
+			// Output Type 3. [Frontmatter Case]
+			else if (commandOption.outType == OutType.FrontMatter) {
+				this.viewManager.insertAtFrontMatter(
+					commandOption.key,
+					limitedOutputs,
+					commandOption.overwrite,
+					commandOption.outPrefix,
+					commandOption.outSuffix,
+				);
+			}
+			// Output Type 4. [Title]
+			else if (commandOption.outType == OutType.Title) {
+				this.viewManager.insertAtTitle(
+					limitedOutputs,
+					commandOption.overwrite,
+					commandOption.outPrefix,
+					commandOption.outSuffix,
+				);
 			}
 			// Show token usage if available
 			let tokenInfo = "";
